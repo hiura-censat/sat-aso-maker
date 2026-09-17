@@ -9,7 +9,7 @@ from workflow_settings import settings
 
 OUT=ROOT/'step2';S1=ROOT/'step1';REGIONS=['HSat2','HSat3','HSat23','ambiguous']
 SELECT=settings()['selection']
-SCANNER=ROOT/'scripts/step2_count';SOURCE=S1/'threshold_sweep'/f"candidates_E_gt_{SELECT['selected_E']}.tsv"
+SCANNER=ROOT/'scripts/step2_count';SOURCE=S1/'candidate_kmers.tsv'
 ROWS=list(csv.DictReader((S0/'region_stats.tsv').open(),delimiter='\t'))
 STATS={(r['hap'],r['chromosome'],r['region']):r for r in ROWS}
 def chromkey(c):
@@ -24,12 +24,12 @@ def setup():
  src=list(csv.DictReader(SOURCE.open(),delimiter='\t'))
  codes=np.array([int(r['kmer_id'].split('_')[1],16) for r in src],dtype='<u4')
  assert len(codes)>0 and np.all(codes[1:]>codes[:-1])
- assert all(r['pooled_pass']=='1' or r['hap_pass']=='1' for r in src)
+ assert all(r['selected']=='True' and r['selection_reason'] in ('pooled','hap','pooled_and_hap') for r in src)
  candidate_file=OUT/'candidate_codes.u32'
  if candidate_file.exists():assert candidate_file.read_bytes()==codes.tobytes()
  else:codes.tofile(candidate_file)
  broad_min=int(np.ceil(SELECT['broad_hap_fraction']*sum(r['sample']!='CHM13' for r in MANIFEST)))
- write_tsv(OUT/'candidates.tsv',['row_index','kmer_id','canonical_kmer','reverse_complement','pooled_selected_threshold','pooled_and_broad_threshold'],((i,r['kmer_id'],r['canonical_kmer'],r['reverse_complement'],r['pooled_pass'],int(r['pooled_pass']=='1' and int(r['qualifying_haps_at_threshold'])>=broad_min)) for i,r in enumerate(src)))
+ write_tsv(OUT/'candidates.tsv',['row_index','kmer_id','canonical_kmer','reverse_complement','pooled_selected_threshold','pooled_and_broad_threshold'],((i,r['kmer_id'],r['canonical_kmer'],r['reverse_complement'],int(r['selection_reason'] in ('pooled','pooled_and_hap')),int(r['selection_reason'] in ('pooled','pooled_and_hap') and int(r['qualifying_haps'])>=broad_min)) for i,r in enumerate(src)))
  write_tsv(OUT/'haplotypes.tsv',['column_index','hap','is_reference','fasta'],((i,r['hap'],int(r['sample']=='CHM13'),r['fasta']) for i,r in enumerate(MANIFEST)))
  config={'k':16,'candidate_source':str(SOURCE),'selected_E':SELECT['selected_E'],'selection':SELECT,'candidate_sha256':sha(SOURCE),'candidate_count':len(codes),'sequence_sets':len(MANIFEST),'nonreference_haps':sum(r['sample']!='CHM13' for r in MANIFEST),'regions':REGIONS,'chromosomes':CHROMS,'strand_order':['canonical_forward','reverse_complement'],'missing_chromosomes':'absent from shard; availability mask false, not biological zero','counter_sha256':sha(SCANNER),'step0_complete_sha256':sha(S0/'COMPLETE.json'),'step1_complete_sha256':sha(S1/'COMPLETE.json')}
  (OUT/'config.json').write_text(json.dumps(config,indent=2)+'\n')

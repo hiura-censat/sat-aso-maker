@@ -32,8 +32,8 @@ with np.load(OUT/'pooled_counts_and_scores.npz') as z:
  counts=z['counts'];t=counts[:,2,:].sum(axis=1);b=counts[:,3,:].sum(axis=1);den=z['valid_starts']
  expected_den=np.array([sum(STATS[(r['hap'],f)] for r in MANIFEST if r['sample']!='CHM13') for f in REGIONS],dtype=np.uint64)
  assert np.array_equal(den,expected_den)
- expected=np.log2((t/den[2]+1e-9)/(b/den[3]+1e-9));assert np.allclose(z['log2_enrichment'],expected,rtol=0,atol=1e-12)
- pooled=(t>=100)&(expected>=2);local=z['qualifying_haps']>0;selected=pooled|local
+ expected=np.log2((t/den[2]+CONFIG['epsilon'])/(b/den[3]+CONFIG['epsilon']));assert np.allclose(z['log2_enrichment'],expected,rtol=0,atol=1e-12)
+ pooled=(t>=CONFIG['min_pooled_target_count'])&(expected>CONFIG['min_log2_enrichment']);local=z['qualifying_haps']>0;selected=pooled|local
  assert np.array_equal(z['selected'],selected)
  assert np.array_equal(np.fromfile(OUT/'candidate_codes.u32',dtype='<u4'),codes[selected])
  assert np.all(z['prevalence_haps']<=573)

@@ -57,13 +57,8 @@ rule step1_finish:
     output: done('step1_finish')
     shell: '{PY} workflow/stage.py step1_finish --run {RUN}'
 
-rule sweep:
-    input: rules.step1_finish.output
-    output: done('sweep')
-    shell: '{PY} workflow/stage.py sweep --run {RUN}'
-
 rule step2_counts:
-    input: rules.sweep.output
+    input: rules.step1_finish.output
     output: done('step2_counts')
     threads: T['step2']
     shell: '{PY} workflow/stage.py step2_counts --run {RUN} --threads {threads}'

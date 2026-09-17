@@ -1,5 +1,7 @@
 # STEP 1: exact canonical 16-mer discovery
 
+> このディレクトリ内の数値と以下の旧手順は旧設定（pooled ≥100 または 1 hap ≥10、初回 E ≥2）の保存済み結果です。現在の Snakemake ワークフローは pooled ≥10 または 1 hap ≥500 の予備候補から、各経路で `E > 10` を直接評価し、sweep を実行しません。新しい結果は別の `runs/<run_id>/` に保存します。詳細は [workflow README](../workflow/README.md)を参照してください。
+
 This run uses Jellyfish 2.3.1 (installed under `.local/`) and the validated STEP 0
 inputs. CHM13 is evaluated separately and excluded from pooled candidate
 selection. Only the 573 eligible non-reference haplotypes contribute to pooled

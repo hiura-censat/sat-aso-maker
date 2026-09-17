@@ -10,7 +10,8 @@ JF=ROOT/'.local/bin/jellyfish'; PACK=ROOT/'scripts/step1_pack'
 SAM=Path(settings()['samtools'])
 REGIONS=['HSat2','HSat3','HSat23','background']
 DT=np.dtype([('code','<u4'),('count','<u8')])
-CONFIG={'k':16,'epsilon':1e-9,'min_log2_enrichment':2.0,'min_pooled_target_count':100,'min_hap_target_count':10,'reference_policy':'CHM13 excluded from pooled discovery, evaluated separately','candidate_rule':'pooled enrichment>=2 and target>=100 OR at least one nonreference hap enrichment>=2 and target>=10','region_order':REGIONS,'orientation_order':['canonical_forward','reverse_complement'],'software':'Jellyfish 2.3.1','samtools':str(SAM),'count_precision':'Jellyfish uint32 per hap; uint64 downstream', 'jellyfish_out_counter_bytes':4,'preliminary_rule':'nonreference pooled target>=100 OR nonreference maximum hap target>=10','background':'complement of existing HSat2/3 BED on eligible T2T chromosomes'}
+SELECT=settings()['selection']
+CONFIG={'k':16,'epsilon':1e-9,'min_log2_enrichment':SELECT['selected_E'],'min_pooled_target_count':SELECT['pooled_min_count'],'min_hap_target_count':SELECT['hap_min_count'],'reference_policy':'CHM13 excluded from pooled discovery, evaluated separately','candidate_rule':f"(pooled E>{SELECT['selected_E']} and target>={SELECT['pooled_min_count']}) OR (at least one nonreference hap E>{SELECT['selected_E']} and target>={SELECT['hap_min_count']})",'region_order':REGIONS,'orientation_order':['canonical_forward','reverse_complement'],'software':'Jellyfish 2.3.1','samtools':str(SAM),'count_precision':'Jellyfish uint32 per hap; uint64 downstream', 'jellyfish_out_counter_bytes':4,'preliminary_rule':f"nonreference pooled target>={SELECT['pooled_min_count']} OR nonreference maximum hap target>={SELECT['hap_min_count']}",'background':'complement of existing HSat2/3 BED on eligible T2T chromosomes'}
 
 def table(path):
  with open(path) as f:return list(csv.DictReader(f,delimiter='\t'))
@@ -84,7 +85,7 @@ def make_pool():
  paths=[OUT/'discovery'/(r['hap']+'.bin.gz') for r in MANIFEST if r['sample']!='CHM13']
  if not all(p.exists() for p in paths):raise RuntimeError('discovery incomplete')
  listing=OUT/'discovery'/'nonreference_files.txt';listing.write_text(''.join(str(p)+'\n' for p in paths))
- res=subprocess.run([str(PACK),'pool',str(listing),str(OUT/'preliminary_candidates.u32')],capture_output=True,text=True,check=True)
+ res=subprocess.run([str(PACK),'pool',str(listing),str(OUT/'preliminary_candidates.u32'),str(CONFIG['min_pooled_target_count']),str(CONFIG['min_hap_target_count'])],capture_output=True,text=True,check=True)
  (OUT/'discovery_summary.json').write_text(res.stdout)
  codes=np.fromfile(OUT/'preliminary_candidates.u32',dtype='<u4');rc=revcodes(codes)
  with (OUT/'preliminary_candidates.both_strands.fa').open('w') as f:
@@ -134,6 +135,12 @@ def enrichment(target,background,target_den,background_den):
  td=target.astype(np.float64)/target_den;bd=background.astype(np.float64)/background_den
  return td,bd,np.log2((td+CONFIG['epsilon'])/(bd+CONFIG['epsilon']))
 
+def qualifies_hap(target_count,log2_enrichment):
+ return (target_count>=CONFIG['min_hap_target_count']) & (log2_enrichment>CONFIG['min_log2_enrichment'])
+
+def qualifies_pooled(target_count,log2_enrichment):
+ return (target_count>=CONFIG['min_pooled_target_count']) & (log2_enrichment>CONFIG['min_log2_enrichment'])
+
 def score():
  codes=np.fromfile(OUT/'preliminary_candidates.u32',dtype='<u4');n=len(codes)
  pooled=np.zeros((n,4,2),dtype=np.uint64);den=np.zeros(4,dtype=np.uint64)
@@ -149,11 +156,11 @@ def score():
   t=counts[:,2,:].sum(axis=1);b=counts[:,3,:].sum(axis=1)
   td,bd,e=enrichment(t,b,denominators[2],denominators[3])
   np.savez_compressed(OUT/'enrichment_by_hap'/(hap+'.npz'),target_density=td,background_density=bd,log2_enrichment=e,valid_starts=denominators)
-  haprows.append([hap,r['sample']=='CHM13',int(denominators[2]),int(denominators[3]),int((t>0).sum()),int(((t>=10)&(e>=2)).sum())])
+  haprows.append([hap,r['sample']=='CHM13',int(denominators[2]),int(denominators[3]),int((t>0).sum()),int(qualifies_hap(t,e).sum())])
   if r['sample']=='CHM13':reference=(counts.copy(),denominators.copy(),e.copy())
   else:
    pooled+=counts;den+=denominators;prevalence+=(t>0).astype(np.uint16)
-   qualified+=((t>=CONFIG['min_hap_target_count']) & (e>=CONFIG['min_log2_enrichment'])).astype(np.uint16)
+   qualified+=qualifies_hap(t,e).astype(np.uint16)
    if denominators[2]>0 and denominators[3]>0:
     esum+=e;emin=np.minimum(emin,e);emax=np.maximum(emax,e);nscore+=1
   qc=json.loads((OUT/'counts'/(hap+'.json')).read_text())
@@ -162,7 +169,7 @@ def score():
   print('score',hi,len(MANIFEST),hap,flush=True)
  t=pooled[:,2,:].sum(axis=1);b=pooled[:,3,:].sum(axis=1)
  td,bd,e=enrichment(t,b,den[2],den[3])
- pooled_pass=(t>=CONFIG['min_pooled_target_count']) & (e>=CONFIG['min_log2_enrichment']);hap_pass=qualified>0;selected=pooled_pass|hap_pass
+ pooled_pass=qualifies_pooled(t,e);hap_pass=qualified>0;selected=pooled_pass|hap_pass
  np.savez_compressed(OUT/'pooled_counts_and_scores.npz',codes=codes,counts=pooled,valid_starts=den,target_density=td,background_density=bd,log2_enrichment=e,prevalence_haps=prevalence,qualifying_haps=qualified,mean_hap_log2_enrichment=esum/max(1,nscore),min_hap_log2_enrichment=emin,max_hap_log2_enrichment=emax,selected=selected,pooled_pass=pooled_pass,hap_pass=hap_pass)
  codes[selected].tofile(OUT/'candidate_codes.u32')
  header=['kmer_id','canonical_kmer','reverse_complement','pooled_target_count','pooled_background_count','pooled_target_density','pooled_background_density','pooled_log2_enrichment','target_prevalence_haps','target_prevalence_fraction','qualifying_haps','mean_hap_log2_enrichment','min_hap_log2_enrichment','max_hap_log2_enrichment','CHM13_target_count','CHM13_background_count','CHM13_log2_enrichment','selected','selection_reason']
@@ -186,11 +193,6 @@ def score():
   w=csv.writer(f,delimiter='\t');w.writerow(['hap','region','valid_16mer_starts','all_or_selected_count_sum','preliminary_candidate_count_sum','distinct_counted_kmers','seconds','canonical_orientation_agreement']);w.writerows(qcrows)
  with (OUT/'hap_summary.tsv').open('w') as f:
   w=csv.writer(f,delimiter='\t');w.writerow(['hap','is_reference','target_valid_starts','background_valid_starts','preliminary_kmers_present_in_target','locally_qualifying_kmers']);w.writerows(haprows)
- thresholds=[]
- for threshold in [1,2,3,4,5]:
-  for mincount in [10,100,1000]:thresholds.append([threshold,mincount,int(((e>=threshold)&(t>=mincount)).sum())])
- with (OUT/'pooled_threshold_sensitivity.tsv').open('w') as f:
-  w=csv.writer(f,delimiter='\t');w.writerow(['min_log2_enrichment','min_pooled_target_count','pooled_candidates']);w.writerows(thresholds)
  summary={'sequence_sets':len(MANIFEST),'nonreference_haps':nscore,'preliminary_candidates':n,'selected_candidates':int(selected.sum()),'pooled_pass':int(pooled_pass.sum()),'hap_pass':int(hap_pass.sum()),'hap_only':int((hap_pass&~pooled_pass).sum()),'pooled_only':int((pooled_pass&~hap_pass).sum()),'both':int((pooled_pass&hap_pass).sum()),'pooled_target_valid_starts':int(den[2]),'pooled_background_valid_starts':int(den[3]),'epsilon':CONFIG['epsilon']}
  (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
  print('SUMMARY',summary,flush=True)

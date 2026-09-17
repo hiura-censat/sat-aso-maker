@@ -1,4 +1,4 @@
-import collections,subprocess,tempfile,unittest
+import collections,gzip,struct,subprocess,tempfile,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];JF=ROOT/'.local/bin/jellyfish'
 def rc(s):return s.translate(str.maketrans('ACGT','TGCA'))[::-1]
@@ -66,4 +66,28 @@ class RegionPipeline(unittest.TestCase):
       self.assertEqual(int(actual[i,ri,0]),wants[family][k])
       self.assertEqual(int(actual[i,ri,1]),0 if k==rc(k) else wants[family][rc(k)])
    finally:p.OUT,p.S0=old_out,old_s0
+
+class SelectionThresholds(unittest.TestCase):
+ def test_preliminary_pool_uses_configured_count_minima(self):
+  with tempfile.TemporaryDirectory() as temp:
+   d=Path(temp);files=[]
+   for name,counts in [('h1',[(0,5),(1,500),(2,9)]),('h2',[(0,5)])]:
+    path=d/(name+'.bin.gz')
+    with gzip.open(path,'wb') as f:
+     for code,count in counts:f.write(struct.pack('<IQ',code,count))
+    files.append(path)
+   listing=d/'files.txt';listing.write_text(''.join(str(path)+'\n' for path in files))
+   out=d/'codes.u32'
+   subprocess.run([str(ROOT/'scripts/step1_pack'),'pool',str(listing),str(out),'10','500'],check=True,capture_output=True)
+   self.assertEqual(out.read_bytes(),struct.pack('<II',0,1))
+   subprocess.run([str(ROOT/'scripts/step1_pack'),'pool',str(listing),str(out),'100','10'],check=True,capture_output=True)
+   self.assertEqual(out.read_bytes(),struct.pack('<I',1))
+
+ def test_enrichment_boundary_is_strict(self):
+  import numpy as np
+  import step1_pipeline as p
+  counts=np.array([9,10,500,500,499])
+  scores=np.array([11.,11.,10.,10.01,11.])
+  np.testing.assert_array_equal(p.qualifies_pooled(counts,scores),[False,True,False,True,True])
+  np.testing.assert_array_equal(p.qualifies_hap(counts,scores),[False,False,False,True,False])
 if __name__=='__main__':unittest.main()

@@ -1,6 +1,6 @@
 # Copy to workflow/config.yaml, then replace the paths for your environment.
 # Use a new run_id whenever changing scientific parameters or input data.
-run_id: baseline_e10
+run_id: pooled10_hap500_e10
 source_root: ../VallePrep_v0.0.0
 python: /absolute/path/to/python
 samtools: /absolute/path/to/samtools
@@ -15,9 +15,8 @@ threads:
 
 selection:
   selected_E: 10
-  sweep_E: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-  pooled_min_count: 100
-  hap_min_count: 10
+  pooled_min_count: 10
+  hap_min_count: 500
   broad_hap_fraction: 0.90
 
 invariants:

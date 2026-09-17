@@ -1,6 +1,6 @@
 # Snakemake workflow
 
-このワークフローは既存の STEP 0–4 と top 3 / 72 配列 CHM13 位置解析を、依存関係を持つ 20 ジョブとして実行します。結果は `runs/<run_id>/` に作成します。ルートの既存 `step0/`〜`step4/` は変更しません。実行時には現在の `scripts/` を run directory にコピーし、その SHA256 と設定ファイルの SHA256 を `.bootstrap.json` に記録します。同じ `run_id` で設定やコードが変わった場合、混在を防ぐため停止します。新しい `run_id` を使ってください。
+このワークフローは既存の STEP 0–4 と top 3 / 72 配列 CHM13 位置解析を、依存関係を持つ 19 ジョブとして実行します。閾値 sweep ジョブはありません。結果は `runs/<run_id>/` に作成します。ルートの既存 `step0/`〜`step4/` は変更しません。実行時には現在の `scripts/` を run directory にコピーし、その SHA256 と設定ファイルの SHA256 を `.bootstrap.json` に記録します。同じ `run_id` で設定やコードが変わった場合、混在を防ぐため停止します。新しい `run_id` を使ってください。
 
 ## 設定
 
@@ -14,22 +14,23 @@
 | `source_root` | VallePrep データディレクトリ。project root からの相対パスまたは絶対パス |
 | `python`, `samtools` | 使用する実行ファイルの絶対パス |
 | `threads.*` | STEP 0/1/2 と STEP 3/4 mismatch の同時 worker 数 |
-| `selection.selected_E` | STEP 2 に渡す HSat23/background の strict `E > selected_E` |
-| `selection.sweep_E` | 比較・出力する strict E 閾値の昇順リスト。`selected_E` を含める |
-| `selection.pooled_min_count` | 閾値スイープの pooled HSat23 count 下限 |
-| `selection.hap_min_count` | 少なくとも 1 hap の HSat23 count 下限 |
+| `selection.selected_E` | STEP 1 本選抜の HSat23/background の strict `E > selected_E` |
+| `selection.pooled_min_count` | pooled HSat23 count 下限（予備候補・本選抜） |
+| `selection.hap_min_count` | 少なくとも1 hapの HSat23 count 下限（予備候補・本選抜） |
 | `selection.broad_hap_fraction` | broad 候補フラグの個別合格 hap 割合 |
 
-初期値は元の解析に対応する `E > 10`、pooled count ≥100、hap count ≥10、broad 90% です。STEP 1 の全 k-mer 発見と元の `E >= 2` 採用表は保存し、**STEP 2 以降に渡す候補集合**を上記 selection で変更します。pooled/hap count 下限を 100/10 より小さくできないのは、STEP 1 の preliminary universe がこの下限で作られているためです。下限を小さくするには発見段階から作り直す実装変更が必要です。
+新しい初期値は `E > 10`、pooled count ≥10、少なくとも1 hapの count ≥500、broad 90% です。STEP 1 の予備候補は **pooled count ≥10 OR 1 hap count ≥500**、本選抜は **(pooled count ≥10 AND pooled E >10) OR (1 hap count ≥500 ANDそのhapの E >10)** です。E は `log2((HSat23 density + 1e-9)/(background density + 1e-9))` です。CHM13 は pooled/個別 hap 判定に含めません。STEP 2 は `step1/candidate_kmers.tsv` を直接読みます。
 
-`invariants.k=16` と `invariants.max_mismatches=2` は現在の C++ rolling counter、2-bit ID、0/1/2 mismatch 集計に埋め込まれた方法上の固定値です。別の値は起動時にエラーにします。STEP 3 の group 選択基準、STEP 4 の ASO screen と score の重みは現状の科学的手法として固定です。上記 `broad_hap_fraction` はスイープ表と STEP 2 のフラグに作用し、STEP 3/4 の pan screen が要求する 90% を変更するものではありません。候補選択を極端に厳しくすると下流の pan/top 3 候補が不足し、明示的なエラーで停止する可能性があります。
+同じ573 hapを合算するため、予備候補の count 条件では「1 hap ≥500」は必ず「pooled ≥10」に含まれます。一方、本選抜では pooled E と個別 hap E が異なるため、二つの経路を残します。新設定の候補数は再計算まで未確定です。ルートの `step0/`〜`step4/` にある数値は旧設定の結果です。
+
+`invariants.k=16` と `invariants.max_mismatches=2` は現在の C++ rolling counter、2-bit ID、0/1/2 mismatch 集計に埋め込まれた方法上の固定値です。別の値は起動時にエラーにします。STEP 3 の group 選択基準、STEP 4 の ASO screen と score の重みは現状の科学的手法として固定です。上記 `broad_hap_fraction` はSTEP 2 のフラグに作用し、STEP 3/4 の pan screen が要求する 90% を変更するものではありません。候補選択を極端に厳しくすると下流の pan/top 3 候補が不足し、明示的なエラーで停止する可能性があります。
 
 ## 実行と確認
 
 プロジェクト直下で、設定した Python 環境の Snakemake を使って実行します。`snakemake` が PATH にある例です。PATH にない場合はその実行ファイルの絶対パスに置き換えます。
 
 ```bash
-cp workflow/config.example.yaml workflow/config.yaml
+cp -n workflow/config.example.yaml workflow/config.yaml
 snakemake --snakefile Snakefile --cores 8 --dry-run
 snakemake --snakefile Snakefile --cores 8
 ```

@@ -37,7 +37,6 @@ def main():
     env['SAT_ASO_SELECTED_E'] = str(cfg['selection']['selected_E'])
     env['SAT_ASO_POOLED_MIN'] = str(cfg['selection']['pooled_min_count'])
     env['SAT_ASO_HAP_MIN'] = str(cfg['selection']['hap_min_count'])
-    env['SAT_ASO_BROAD_FRACTION'] = str(cfg['selection']['broad_hap_fraction'])
     env['OPENBLAS_NUM_THREADS'] = '2'
     env['OMP_NUM_THREADS'] = '2'
     script = lambda name: [py, 'scripts/' + name]
@@ -46,7 +45,6 @@ def main():
         'step1_discovery': [script('test_step1.py'), script('step1_pipeline.py') + ['--phase', 'discovery', '--workers', str(args.threads)]],
         'step1_counts': [script('step1_pipeline.py') + ['--phase', 'counts', '--workers', str(args.threads)]],
         'step1_finish': [script('finish_step1.py')],
-        'sweep': [script('sweep_step1.py'), ['Rscript', 'scripts/plot_step1_sweep.R']],
         'step2_counts': [script('test_step2.py'), script('step2_pipeline.py') + ['--workers', str(args.threads)]],
         'step2_finish': [script('finish_step2.py')],
         'step3_prepare': [script('step3_prepare.py'), script('test_step3.py')],
@@ -80,7 +78,6 @@ def main():
         'step0': ['step0/COMPLETE.json', 'step0/manifest.tsv', 'step0/region_stats.tsv'],
         'step1_discovery': ['step1/preliminary_candidates.u32'],
         'step1_finish': ['step1/COMPLETE.json', 'step1/pooled_counts_and_scores.npz'],
-        'sweep': [f"step1/threshold_sweep/candidates_E_gt_{cfg['selection']['selected_E']}.tsv", 'step1/threshold_sweep/validation.json', 'step1/threshold_sweep/threshold_sweep.png'],
         'step2_finish': ['step2/COMPLETE.json', 'step2/matrices/matrix_A_counts.npy'],
         'step3_prepare': ['step3/data/PREPARED.json'],
         'step3_run': ['step3/COMPLETE.json', 'step3/hap_groups.tsv'],

@@ -2,6 +2,8 @@
 
 既存の VallePrep/Altemose HSat2・HSat3 注釈と T2T 通過染色体から、HSat2/3 領域に濃縮する canonical 16-mer を見つけ、hap・family・染色体別に数え、配列パターン群と 0/1/2 mismatch によって ASO 標的候補を優先順位付けした解析です。最後に、評価した **72 配列**について CHM13 上の全 exact ヒット座標、CenSat annotation の内外、hap 群別・染色体別の分布を可視化しました。この README は同じ入力と実行環境で解析を再現するための入口です。実装の細部は [STEP 0](step0/README.md)、[STEP 1](step1/README.md)、[閾値スイープ](step1/threshold_sweep/README.md)、[STEP 2](step2/README.md)、[STEP 3](step3/README.md)、[STEP 4](step4/README.md)、[72 配列の位置解析](step4/all72_landscape/README.md)を参照してください。
 
+**保存済み結果と新規ワークフローの区別:** このページの 159,988 配列・72 配列などの数値と各 STEP の手順は、旧設定（pooled count ≥100 または 1 hap count ≥10、後段の threshold sweep）による保存済み解析を記録したものです。現在の [Snakemake ワークフロー](workflow/README.md)は **pooled count ≥10 または 1 hap count ≥500、`E > 10`、sweep なし**を新しいデフォルトとします。新条件の件数は再計算するまで不明です。旧数値を再計算する場合は、変更前の GitHub commit `11fe4a5` のコードを使用してください。
+
 ## 解析の全体像
 
 | 段階 | 処理 | 今回の結果・次段階への入力 |
@@ -157,7 +159,7 @@ OPENBLAS_NUM_THREADS=2 /home/senescence/miniconda3/envs/kmer_validation_env/bin/
 
 ## 再現性の確認と解釈上の注意
 
-Snakemake で独立した解析を再実行する場合は [ワークフローの設定・実行方法](workflow/README.md)を参照してください。[設定例](workflow/config.example.yaml)をローカルの `workflow/config.yaml` にコピーし、run ID、入力元、並列数、`E >` 選択閾値とカウント下限を調整できます。初めに `--dry-run` で依存関係を確認し、実行結果は `runs/<run_id>/` に保存します。
+Snakemake で新条件の独立した解析を実行する場合は [ワークフローの設定・実行方法](workflow/README.md)を参照してください。[設定例](workflow/config.example.yaml)をローカルの `workflow/config.yaml` にコピーし、run ID、入力元、並列数、`E >` 選択閾値とカウント下限を調整できます。初めに `--dry-run` で依存関係を確認し、実行結果は `runs/<run_id>/` に保存します。新ワークフローでは sweep 工程はなく、STEP 2 は STEP 1 の `candidate_kmers.tsv` を直接受け取ります。
 
 各段階の `COMPLETE.json` は当時の全処理完了・照合結果です。STEP 0 は領域分割と窓数、STEP 1 は Jellyfish count と STEP 0 の窓数・向き、STEP 2 は全候補の染色体和と STEP 1、STEP 3/4 は距離 0 の全 574 set count と STEP 1、および mismatch 近傍の網羅性を検証しました。72 配列の [COMPLETE.json](step4/all72_landscape/COMPLETE.json)は CHM13 の fine HSat2/3 位置 count と STEP 4 の距離 0 行列、先行 top 3 の座標、72 枚ずつの PNG、55 件の CenSat 外 count を監査します。ファイル内容やコードを変えた場合、古い `COMPLETE.json` が新しい実行の保証にはなりません。
 

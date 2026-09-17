@@ -1,5 +1,7 @@
 # STEP 2: family × chromosome × haplotype counts
 
+> このディレクトリの159,988候補と以下の行列サイズは旧設定で得た保存済み結果です。現在の Snakemake ワークフローは STEP 1 の `candidate_kmers.tsv` を直接入力し、pooled ≥10 または 1 hap ≥500、各経路 `E > 10` の新条件で候補数を決めます。新しい行列は `runs/<run_id>/step2/` に作成され、行数は再計算まで不明です。
+
 ## 対象と入力
 
 STEP 1で全573 hap合算、または少なくとも1つのhapでE > 10を満たした159,988個のcanonical 16-merを集計します。合算で合格した34,332配列、さらに516/573 hap以上で個別にも合格した9,740配列を`candidates.tsv`のフラグで識別できます。CHM13を含む574セットを数え、pooled指標からCHM13を除外します。
