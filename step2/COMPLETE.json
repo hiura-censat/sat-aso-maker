@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "candidate_count": 159988,
+  "sequence_sets": 574,
+  "source_metadata_unchanged": true,
+  "all_shards_match_step1_both_orientations": true,
+  "all_matrices_match_shards": true,
+  "density_normalization_verified": true,
+  "missing_chromosome_mask_verified": true,
+  "pooled_counts_exclude_CHM13": true,
+  "candidate_metrics_counts_prevalence_family_fraction_verified": true,
+  "family_junction_accounting_verified": true,
+  "finished_at": "2026-09-09T01:59:13+0900",
+  "script_sha256": {
+    "plot_step2.R": "f12f40ef70313ce0dc374b2374969597ad4563c596bbc8ff2533204ea5f0fea8",
+    "step2_count.cpp": "c0abf9c9c833f73dcba383058be400e9c6c8d8fd78127b5a19afca08df8532bf",
+    "step2_count": "51d6f28ba552e957f39f2004a271c422a2dcea4533c09471bff69286a1e963ac",
+    "step2_pipeline.py": "6ccfc66340540ec470608124876b2e0e9f19b159e1d785b6f33dcabaed4b80fc",
+    "verify_step2.py": "760bcec5103c1d8bf4f64b6d9d58ff646cf8ad3d44ec6b467be8c48681c4b379",
+    "export_step2.py": "3ca530f5a9245d1df5adaa8a3a4b1941a689f19b61052d272eb5bbaa495f6b00",
+    "test_step2.py": "5d656fb44645d4abcb4645774adf6f2ba37557dc65a56ffeade3a760b1256dfb",
+    "summarize_step2.py": "917885d27c2230ef8a64301212d6f82b8757c76f5aba50622cc55953e41102f4",
+    "finish_step2.py": "9c610dcebfaae99446f4810bc1b6c7d002841c77d7d04f78cd9f7a6f5ff52d1d"
+  }
+}

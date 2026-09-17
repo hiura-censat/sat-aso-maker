@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "source_metadata_unchanged": true,
+  "primary_clusters_reconstructed_from_core_counts": true,
+  "reference_excluded_from_fitting": true,
+  "missing_haps_unassigned": true,
+  "representative_correlations_below_0.95": true,
+  "cluster_acceptance_criteria_verified": true,
+  "all_radius_2_neighborhoods_exhaustive_and_deduplicated": true,
+  "variant_spectrum_serialization_audit_haps": 12,
+  "all_574_hap_exact_counts_match_step1": true,
+  "mismatch_position_accounting_verified": true
+}

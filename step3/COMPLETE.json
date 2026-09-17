@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "source_metadata_unchanged": true,
+  "primary_clusters_reconstructed_from_core_counts": true,
+  "reference_excluded_from_fitting": true,
+  "missing_haps_unassigned": true,
+  "representative_correlations_below_0.95": true,
+  "cluster_acceptance_criteria_verified": true,
+  "all_radius_2_neighborhoods_exhaustive_and_deduplicated": true,
+  "variant_spectrum_serialization_audit_haps": 12,
+  "all_574_hap_exact_counts_match_step1": true,
+  "mismatch_position_accounting_verified": true,
+  "finished_at": "2026-09-14T17:31:23+0900",
+  "script_sha256": {
+    "test_step3.py": "d70190cdb03ae2877c8a2db7475a4ddf14957f83bd72b2eddd0f3799eb54b3ea",
+    "step3_hclust.R": "0c968854d814927bdf8de387b96e7e61f134297cb29041858e299cefdb9dae21",
+    "plot_step3.R": "323e4a907f5c12c8e38c3a90eb40cdb87a1fb9fa935e788f2286a8ddaadf37aa",
+    "step3_count.cpp": "a81a592b3c750f93f28a5402d55946abbd371cc6692dd42e5eca12a4cfd2329e",
+    "step3_summarize_mismatch.py": "5cdcf0d05c42fa36ec0ff860abb8e9dc86906ca26ba56bcabe6fb5407a72fb16",
+    "run_step3.py": "d637ff15c7704640c5fa635584bdbb98487c12e72f682089a201b0937c791c8d",
+    "step3_candidates.py": "4fca1f049f79d5bd8b7cbaa5ddf28c6bb9dce1301adf6072b1b862900424a56c",
+    "step3_finalize.py": "2d33c281ca1066043abd1ce330e7579fa5ce4228822a02644d018e7b0fe7b55c",
+    "step3_count": "f25b64c5ab28cb1f63c2340750f389599662962bfd95519751b7e7cad09d2ce0",
+    "step3_mismatch.py": "85ae9040c4025d945955adf262c5bd4c08c7d8615e40685a32b7f65257fc61d4",
+    "step3_neighbors.py": "4f3fc2d2b6bb38e0a004e16456ce899be20c66dbc9350439d67e7507e2aafc55",
+    "step3_prepare.py": "60db954c02ebce958000c4c8074efc80ff9db757880ad940b06f23bc8c2a8b3d",
+    "step3_cluster.py": "856520e2b766b09783b4bd1e739446c72da4b151cd9065869e4d91b5969ebc3d"
+  }
+}

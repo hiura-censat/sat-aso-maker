@@ -1,0 +1,4 @@
+kmer_id	total_exact_hits	inside_broad_CenSat	outside_broad_CenSat	fine_HSat3_hits	fine_HSat2_hits	fine_alphaSat_hits	fine_ct_hits	outside_fine_annotation_hits
+k16_3e476af8	30026	30026	0	30026	0	0	0	0
+k16_a0d0562c	18152	18152	0	18152	0	0	0	0
+k16_4118ba0e	14425	14425	0	14425	0	0	0	0

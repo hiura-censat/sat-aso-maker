@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "kmer_ids": [
+    "k16_3e476af8",
+    "k16_a0d0562c",
+    "k16_4118ba0e"
+  ],
+  "chm13_filtered_chromosomes": 24,
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "CHM13_HSat3_Fasta_hits_match_STEP4_matrix": true,
+  "coordinate_system": "0-based half-open, exact 16-mer both orientations",
+  "group_scope": "HSat3 STEP3 common-core regional sequence-pattern groups; NA means core incomplete"
+}

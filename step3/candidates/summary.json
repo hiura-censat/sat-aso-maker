@@ -1,0 +1,19 @@
+{
+  "families": [
+    {
+      "family": "HSat2",
+      "pan_exact_candidates": 2470,
+      "core_groups": 3,
+      "core_haps": 489
+    },
+    {
+      "family": "HSat3",
+      "pan_exact_candidates": 5254,
+      "core_groups": 7,
+      "core_haps": 442
+    }
+  ],
+  "mismatch_query_count": 24,
+  "query_cap": 24,
+  "note": "same-data exploratory effect sizes, not independent validation; no p-values"
+}

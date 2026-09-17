@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "STEP4_complete_sha256": "2a3f0ed062df9094d1a12c24da4a7c215832f8ea8140fc1c1176dd00e7178422",
+  "source_STEP4_unchanged": true,
+  "queries": 72,
+  "CHM13_exact_hits": 559297,
+  "hap_chromosome_rows": 991872,
+  "all_72_per_query_PNG_verified": true,
+  "all_72_dominant_zoom_PNG_verified": true,
+  "CHM13_outside_overview_PNG_verified": true,
+  "original_top3_coordinate_sets_reproduced_by_one_pass_scanner": true,
+  "all_72_fine_HSat2_HSat3_counts_match_STEP4": true,
+  "outside_exact_hits_total": 55,
+  "queries_with_outside_hits": 21,
+  "finished_at": "2026-09-15T18:42:49+0900",
+  "script_sha256": {
+    "scan72_chm13.cpp": "c37ee13db92b304b710cc9489f1332ad93a91e04114d6aa8c13bf2b6db025858",
+    "all72_landscape.py": "ea34a1341b52f232f5acffff74ccb4699060cf4ecccafb6a722d58ecd7bfa1ca",
+    "plot_all72_landscape.R": "f04f918a95a8d9569e1b6fae4c12aec20e9e1d0bc24749e7d8139946beb74ab6",
+    "plot_all72_zoom.R": "a5a4c531fc3469b4fa1db52cb59f8db621bce1d4b1284c588b9a8f4c6e549f5c",
+    "finalize_all72_landscape.py": "70ef5a62324526625bf58a9643df54bf605527e82eadad678709ea736a90da0c"
+  }
+}

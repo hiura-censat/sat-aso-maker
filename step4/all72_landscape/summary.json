@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "queries": 72,
+  "CHM13_exact_hits": 559297,
+  "sequence_sets": 574,
+  "hap_chromosome_rows": 991872,
+  "fine_HSat2_and_HSat3_intervals_match_STEP0": true,
+  "all_72_CHM13_fine_family_counts_match_STEP4_matrix": true,
+  "broad_CenSat_BED": "/home/senescence/Documents/storage2/hiura/docker/bulk_env/data/00_analysis/Repthoscope.v1.0.0/VallePrep_v0.0.0/reference/chm13v2.0_censat_v2.1.bed",
+  "broad_CenSat_BED_sha256": "be8d08c610ff15beec63097356b7b52aafaf50201c3889a71438adc5f9625e1d",
+  "fine_CenSat_BED": "/home/senescence/Documents/storage2/hiura/docker/bulk_env/data/00_analysis/Repthoscope.v1.0.0/VallePrep_v0.0.0/workdir/work1/bed_all/chm13v2.0.censat.bed",
+  "fine_CenSat_BED_sha256": "47ce40cf3b1a5f5c058cc7fbfd643a8ca0f2d502d3a7a3160086efc98b4cb9a5",
+  "coordinate_system": "0-based half-open exact 16-mers, canonical and reverse complement",
+  "group_scope": "STEP3 regional common-core groups; NA means incomplete core"
+}

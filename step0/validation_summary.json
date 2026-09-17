@@ -1,0 +1,58 @@
+{
+  "eligible_sequence_sets": 574,
+  "includes_CHM13_reference": true,
+  "samples": 292,
+  "hap_chromosome_pairs": 8531,
+  "statistics_rows": 42655,
+  "excluded": [
+    {
+      "hap": "HG00126_hap1",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "HG00272_hap2",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "HG01786_hap2",
+      "reason": "EXCLUDE_invalid_annotation_coordinate"
+    },
+    {
+      "hap": "HG02280_hap1",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "HG03732_hap1",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "NA18983_hap1",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "NA19036_hap1",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "NA19700_hap2",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    },
+    {
+      "hap": "NA19909_hap2",
+      "reason": "EXCLUDE_annotation_incomplete_or_missing_input"
+    }
+  ],
+  "totals": {
+    "HSat2_bp": 9432367800,
+    "HSat2_valid_16mer_starts": 9431732116,
+    "HSat3_bp": 8829501434,
+    "HSat3_valid_16mer_starts": 8828917399,
+    "HSat23_bp": 18261869234,
+    "HSat23_valid_16mer_starts": 18260846825,
+    "ambiguous_bp": 0,
+    "ambiguous_valid_16mer_starts": 0,
+    "background_bp": 1178357886668,
+    "background_valid_16mer_starts": 1177491576761
+  },
+  "input_metadata_unchanged": true
+}

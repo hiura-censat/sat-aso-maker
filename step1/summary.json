@@ -1,0 +1,14 @@
+{
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "preliminary_candidates": 1195753,
+  "selected_candidates": 1131847,
+  "pooled_pass": 1095175,
+  "hap_pass": 452391,
+  "hap_only": 36672,
+  "pooled_only": 679456,
+  "both": 415719,
+  "pooled_target_valid_starts": 18162767502,
+  "pooled_background_valid_starts": 1174472388960,
+  "epsilon": 1e-09
+}

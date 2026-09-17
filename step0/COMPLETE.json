@@ -1,0 +1,10 @@
+{
+  "haps": 574,
+  "excluded": 9,
+  "k": 16,
+  "sequence_storage": "source FASTA symlinks plus region BED views",
+  "validation": "PASS",
+  "hap_chromosome_pairs": 8531,
+  "statistics_rows": 42655,
+  "includes_CHM13_reference": true
+}

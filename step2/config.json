@@ -1,0 +1,48 @@
+{
+  "k": 16,
+  "candidate_source": "/home/senescence/Documents/storage2/hiura/docker/bulk_env/data/00_analysis/Repthoscope.v1.0.0/sat-aso-maker/step1/threshold_sweep/candidates_E_gt_10.tsv",
+  "candidate_sha256": "adff673316e388a66a76b1ec28af5c05d902929a3f21464f6772ae6f9086724e",
+  "candidate_count": 159988,
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "regions": [
+    "HSat2",
+    "HSat3",
+    "HSat23",
+    "ambiguous"
+  ],
+  "chromosomes": [
+    "chr1",
+    "chr2",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr20",
+    "chr21",
+    "chr22",
+    "chrX",
+    "chrY"
+  ],
+  "strand_order": [
+    "canonical_forward",
+    "reverse_complement"
+  ],
+  "missing_chromosomes": "absent from shard; availability mask false, not biological zero",
+  "counter_sha256": "51d6f28ba552e957f39f2004a271c422a2dcea4533c09471bff69286a1e963ac",
+  "step0_complete_sha256": "6d277ae59430ff5618535ecc36bb5aa51cd9233989ce6d8f3804056d95cb57d1",
+  "step1_complete_sha256": "194fea9f5d1ee89acaae921f068bdb194238f9741030d8455b433116742aa8da"
+}

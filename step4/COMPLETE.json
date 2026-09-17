@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "source_step3_complete_sha256": "02967c33f8f4908dc4b37167af1d78d9aae5608ce99acaa5c40e27049bc4a686",
+  "source_step3_unchanged": true,
+  "integrated_exact_candidates": 31335,
+  "mismatch_queries": 72,
+  "new_query_radius2_neighborhoods_exhaustive_and_deduplicated": true,
+  "variant_spectrum_serialization_audit_haps": 12,
+  "all_574_new_query_counts_match_step1_at_0mm": true,
+  "all_valid_windows_match_step0": true,
+  "mismatch_position_accounting_verified": true,
+  "orientation_fields_verified": true,
+  "plots_verified": 3,
+  "finished_at": "2026-09-15T01:03:51+0900",
+  "script_sha256": {
+    "step4_rank.py": "4fdc9159d98e0fad1497fd8c6e110ee51d5742f461b3b570e749ed1e23f08435",
+    "step4_neighbors.py": "a777aa5e5802457ca772f1eb47f940d36b08b9020deee5e0110e32b269b254a5",
+    "plot_step4.R": "40bf83811554143149286e69194cf54f8367aec238346eb7041ac1daf1b30ed8",
+    "step4_finalize.py": "e25d3962b4578902f55091181b0708925972674d845acfa5cd659801e0f31c8c",
+    "step4_summarize.py": "f70b6b1d214d30407fd521a9cc90c4801d09137159f175602eaa2689476c0f8b",
+    "step4_mismatch.py": "5e93228add84039bb82958d43e8d8e8a36e7d3bc137f704d219befb043b6e4bc"
+  }
+}

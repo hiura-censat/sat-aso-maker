@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "preliminary_candidates": 1195753,
+  "selected_candidates": 1131847,
+  "all_target_counts_match_step0": true,
+  "canonical_orientation_agreement": true,
+  "source_metadata_unchanged": true,
+  "selection_and_scores_verified": true,
+  "background_counts_are_candidate_restricted": true,
+  "python": "3.13.12 | packaged by conda-forge | (main, Feb  5 2026, 05:53:46) [GCC 14.3.0]",
+  "jellyfish": "2.3.1"
+}

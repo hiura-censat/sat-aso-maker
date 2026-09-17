@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "candidate_count": 159988,
+  "sequence_sets": 574,
+  "source_metadata_unchanged": true,
+  "all_shards_match_step1_both_orientations": true,
+  "all_matrices_match_shards": true,
+  "density_normalization_verified": true,
+  "missing_chromosome_mask_verified": true,
+  "pooled_counts_exclude_CHM13": true,
+  "candidate_metrics_counts_prevalence_family_fraction_verified": true,
+  "family_junction_accounting_verified": true
+}

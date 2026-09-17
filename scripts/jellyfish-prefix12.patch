@@ -1,0 +1,74 @@
+--- a/sub_commands/count_main.cc
++++ b/sub_commands/count_main.cc
+@@ -1,3 +1,8 @@
++#include <sys/mman.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <cstring>
+ /*  This file is part of Jellyfish.
+ 
+     Jellyfish is free software: you can redistribute it and/or modify
+@@ -103,6 +108,52 @@
+   virtual bool operator()(const mer_dna& x) { return and_res(true, x); }
+   bool and_res(bool r, const mer_dna& x) const {
+     return r ? (prev_ ? (*prev_)(x) : true) : false;
++  }
++};
++
++// sat-aso-maker: optional exact-query prefix gate for plain, one-line 16-mer FASTA seeds.
++// This only rejects prefixes absent from every seed. UPDATE still checks the full key.
++struct filter_if_prefix12 : public filter {
++  std::vector<uint64_t> bits_;
++  const uint64_t* active_;
++  void* mapped_ = MAP_FAILED;
++  filter_if_prefix12(const std::vector<const char*>& paths, filter* prev) : filter(prev), bits_(1U << 18, 0) {
++    for(const auto& path : paths) {
++      std::ifstream in(path);
++      if(!in) err::die("Cannot open prefix-filter seed FASTA");
++      std::string line;
++      while(std::getline(in, line)) {
++        if(line.empty() || line[0] == '>') continue;
++        if(line.size() != 16 || line.find_first_not_of("ACGT") != std::string::npos)
++          err::die("Prefix filter requires one uppercase 16-mer per FASTA sequence line");
++        mer_dna mer(line.c_str());
++        uint32_t prefix = mer.get_bits(8, 24);
++        bits_[prefix >> 6] |= uint64_t(1) << (prefix & 63);
++      }
++    }
++    active_ = bits_.data();
++    if(paths.size() == 1) {
++      std::string path = std::string(paths[0]) + ".prefix12.bitmap";
++      int fd = open(path.c_str(), O_RDONLY);
++      if(fd >= 0) {
++        const size_t bytes = (1U << 18) * sizeof(uint64_t);
++        struct stat st;
++        if(fstat(fd, &st) || size_t(st.st_size) != bytes) err::die("Invalid shared prefix bitmap size");
++        mapped_ = mmap(NULL, bytes, PROT_READ, MAP_SHARED, fd, 0);
++        close(fd);
++        if(mapped_ == MAP_FAILED || std::memcmp(mapped_, bits_.data(), bytes))
++          err::die("Shared prefix bitmap does not match query FASTA");
++        active_ = static_cast<const uint64_t*>(mapped_);
++        std::vector<uint64_t>().swap(bits_);
++      }
++    }
++  }
++  ~filter_if_prefix12() {
++    if(mapped_ != MAP_FAILED) munmap(mapped_, (1U << 18) * sizeof(uint64_t));
++  }
++  bool operator()(const mer_dna& mer) {
++    uint32_t prefix = mer.get_bits(8, 24);
++    return and_res((active_[prefix >> 6] >> (prefix & 63)) & 1, mer);
+   }
+ };
+ 
+@@ -322,6 +373,9 @@
+     bf.reset(new mer_dna_bloom_filter(args.bf_fp_arg, args.bf_size_arg));
+     mer_filter.reset(new filter_bf(*bf));
+   }
++
++  if(std::getenv("SAT_ASO_PREFIX_FILTER") && args.if_given && args.mer_len_arg == 16 && !args.canonical_flag)
++    mer_filter.reset(new filter_if_prefix12(args.if_arg, mer_filter.release()));
+ 
+   if(args.min_qual_char_given || args.min_quality_given) {
+     mer_qual_counter counter(args.threads_arg, ary, streams,

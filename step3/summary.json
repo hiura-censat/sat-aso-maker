@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "HSat2_core_haps": 489,
+  "HSat2_core_groups": 3,
+  "HSat3_core_haps": 442,
+  "HSat3_core_groups": 7,
+  "mismatch_queries": 24,
+  "mismatch_sequence_sets": 574,
+  "strict_pan_pass_counts_by_radius": [
+    4,
+    8,
+    3
+  ],
+  "interpretation": "Regional sequence-pattern groups; whole-genome group concordance is low. Group marker selection is exploratory on the discovery data."
+}

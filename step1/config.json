@@ -1,0 +1,25 @@
+{
+  "k": 16,
+  "epsilon": 1e-09,
+  "min_log2_enrichment": 2.0,
+  "min_pooled_target_count": 100,
+  "min_hap_target_count": 10,
+  "reference_policy": "CHM13 excluded from pooled discovery, evaluated separately",
+  "candidate_rule": "pooled enrichment>=2 and target>=100 OR at least one nonreference hap enrichment>=2 and target>=10",
+  "region_order": [
+    "HSat2",
+    "HSat3",
+    "HSat23",
+    "background"
+  ],
+  "orientation_order": [
+    "canonical_forward",
+    "reverse_complement"
+  ],
+  "software": "Jellyfish 2.3.1",
+  "samtools": "/home/senescence/miniconda3/envs/kmer_validation_env/bin/samtools",
+  "count_precision": "Jellyfish uint32 per hap; uint64 downstream",
+  "jellyfish_out_counter_bytes": 4,
+  "preliminary_rule": "nonreference pooled target>=100 OR nonreference maximum hap target>=10",
+  "background": "complement of existing HSat2/3 BED on eligible T2T chromosomes"
+}

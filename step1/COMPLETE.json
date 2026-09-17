@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "preliminary_candidates": 1195753,
+  "selected_candidates": 1131847,
+  "all_target_counts_match_step0": true,
+  "canonical_orientation_agreement": true,
+  "source_metadata_unchanged": true,
+  "selection_and_scores_verified": true,
+  "background_counts_are_candidate_restricted": true,
+  "python": "3.13.12 | packaged by conda-forge | (main, Feb  5 2026, 05:53:46) [GCC 14.3.0]",
+  "jellyfish": "2.3.1",
+  "finished_at": "2026-09-09T00:40:55+0900",
+  "script_sha256": {
+    "benchmark_step1_bloom.py": "e139cea11fc14d1959adad6e6319d1024d35436c9ca4d9bc87b3680f3b980f7c",
+    "step1_pipeline.py": "b02014211ee0ba87a688514d3080c2566a38b4a597ce2cc3ed3c2d025c460141",
+    "validate_step1_prefix.py": "5bc5a8f094afba38f47125898b71446e33fb5e63cb7e951f569545ed3e072339",
+    "plot_step1_data.py": "e8f9f73c716a6581402951d82fa4a931f89c009e8443bf20848162064d408751",
+    "verify_step1.py": "5edd0de5bf48b44944412aaa63ee91c6818771b0a9d62be258a1329bb48b6427",
+    "finish_step1.py": "f6ebcd21ddc29ee2454d58b132903f99d60528b752d12cd35bfd30b927d3ab77",
+    "step1_pack.cpp": "7a754e354806727362d26fffb8ae4efa4d09f288aae1f34e20196005ee17b05d",
+    "export_step1_counts.py": "3e6f6c14c3cb8f2796e868d021666dae82513f27a24b2ffbdbe9af9921777480",
+    "step1_pack": "6a4af76029dc17a682b830b8673abe6dd0bb180e44d924852a57597dd66cb860",
+    "benchmark_step1_prefix.py": "a29e85abb38b67c0b62c0fe4d6adda9ab7faa1c4b692162bc03bc25ec3274cd5",
+    "plot_step1.R": "5448ba9cef813fd5d72f4ba831d1d15003c2d266317d703ca873682be6ca3d92",
+    "test_step1.py": "981c42b09f3830107400e84917be62f3247210938891994c7ead5af7160c9356"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "status": "complete",
+  "integrated_exact_candidates": 31335,
+  "mismatch_evaluated_candidates": 72,
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "strict_pan_pass_counts_by_radius": [
+    39,
+    24,
+    9
+  ],
+  "category_pass_counts_by_radius": [
+    70,
+    7,
+    4
+  ],
+  "robustness_tiers": {
+    "A_le2mm": 4,
+    "B_le1mm": 3,
+    "C_exact": 63,
+    "D_fails_exact": 2
+  },
+  "scope": "HSat2/HSat3 target discovery using existing annotations on eligible T2T chromosomes",
+  "interpretation": "Ranked targets for experimental ASO design; sequence-only quality proxies and genomic occurrence are not knockdown efficacy."
+}

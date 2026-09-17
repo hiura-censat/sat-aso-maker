@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "fine_censat_bed": "/home/senescence/Documents/storage2/hiura/docker/bulk_env/data/00_analysis/Repthoscope.v1.0.0/VallePrep_v0.0.0/workdir/work1/bed_all/chm13v2.0.censat.bed",
+  "fine_censat_bed_sha256": "47ce40cf3b1a5f5c058cc7fbfd643a8ca0f2d502d3a7a3160086efc98b4cb9a5",
+  "broad_censat_bed": "/home/senescence/Documents/storage2/hiura/docker/bulk_env/data/00_analysis/Repthoscope.v1.0.0/VallePrep_v0.0.0/reference/chm13v2.0_censat_v2.1.bed",
+  "broad_censat_bed_sha256": "be8d08c610ff15beec63097356b7b52aafaf50201c3889a71438adc5f9625e1d",
+  "fine_HSat3_intervals_match_STEP0": 247,
+  "coordinate_system": "0-based half-open; each exact 16-mer must be completely inside annotation interval",
+  "kmer_totals": [
+    {
+      "kmer_id": "k16_3e476af8",
+      "total_exact_hits": 30026,
+      "inside_broad_CenSat": 30026,
+      "outside_broad_CenSat": 0,
+      "fine_HSat3_hits": 30026,
+      "fine_HSat2_hits": 0,
+      "fine_alphaSat_hits": 0,
+      "fine_ct_hits": 0,
+      "outside_fine_annotation_hits": 0
+    },
+    {
+      "kmer_id": "k16_a0d0562c",
+      "total_exact_hits": 18152,
+      "inside_broad_CenSat": 18152,
+      "outside_broad_CenSat": 0,
+      "fine_HSat3_hits": 18152,
+      "fine_HSat2_hits": 0,
+      "fine_alphaSat_hits": 0,
+      "fine_ct_hits": 0,
+      "outside_fine_annotation_hits": 0
+    },
+    {
+      "kmer_id": "k16_4118ba0e",
+      "total_exact_hits": 14425,
+      "inside_broad_CenSat": 14425,
+      "outside_broad_CenSat": 0,
+      "fine_HSat3_hits": 14425,
+      "fine_HSat2_hits": 0,
+      "fine_alphaSat_hits": 0,
+      "fine_ct_hits": 0,
+      "outside_fine_annotation_hits": 0
+    }
+  ]
+}

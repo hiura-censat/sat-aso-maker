@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "source_step3_complete_sha256": "02967c33f8f4908dc4b37167af1d78d9aae5608ce99acaa5c40e27049bc4a686",
+  "source_step3_unchanged": true,
+  "integrated_exact_candidates": 31335,
+  "mismatch_queries": 72,
+  "new_query_radius2_neighborhoods_exhaustive_and_deduplicated": true,
+  "variant_spectrum_serialization_audit_haps": 12,
+  "all_574_new_query_counts_match_step1_at_0mm": true,
+  "all_valid_windows_match_step0": true,
+  "mismatch_position_accounting_verified": true,
+  "orientation_fields_verified": true,
+  "plots_verified": 3
+}

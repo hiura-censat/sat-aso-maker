@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "threshold_operator": ">",
+  "thresholds": [
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20
+  ],
+  "nonreference_haps": 573,
+  "preliminary_candidates": 1195753,
+  "epsilon": 1e-09,
+  "pooled_min_count": 100,
+  "hap_min_count": 10,
+  "monotonicity_checked": true
+}

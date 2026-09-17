@@ -1,0 +1,26 @@
+{
+  "candidate_count": 159988,
+  "sequence_sets": 574,
+  "nonreference_haps": 573,
+  "reference": "chm13v2.0",
+  "observed_hap_chromosome_pairs": 8531,
+  "pooled_E_gt_10_candidates": 34332,
+  "pooled_and_broad90_candidates": 9740,
+  "ambiguous_valid_starts": 0,
+  "HSat2_count_fraction_ge_0.9": 66738,
+  "HSat3_count_fraction_ge_0.9": 82609,
+  "union_max_chr_count_fraction_ge_0.9": 81978,
+  "union_prevalence_ge_90pct": 89661,
+  "matrix_A_shape": [
+    159988,
+    574
+  ],
+  "matrix_B_shape": [
+    159988,
+    1148
+  ],
+  "matrix_C_family_columns_including_missing": 27552,
+  "step1_per_hap_agreement": true,
+  "counts_dtype": "uint64",
+  "density_unit": "counts per million valid 16-mer starts"
+}

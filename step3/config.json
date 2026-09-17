@@ -1,0 +1,45 @@
+{
+  "seed": 42,
+  "core_chromosome_min_measurable_fraction": 0.85,
+  "core_chromosomes": {
+    "HSat2": [
+      "chr7",
+      "chr10"
+    ],
+    "HSat3": [
+      "chr5",
+      "chr7",
+      "chr10",
+      "chr20"
+    ]
+  },
+  "candidate_count": 159988,
+  "nonreference_haps": 573,
+  "chromosomes": [
+    "chr1",
+    "chr2",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr20",
+    "chr21",
+    "chr22",
+    "chrX",
+    "chrY"
+  ],
+  "source_complete_sha256": "1317af2589afb1a69c7166dee58113109c6e5d0cd03926026926e20583eeb13b"
+}

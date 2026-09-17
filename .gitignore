@@ -1,0 +1,20 @@
+# Local configuration, source binaries, caches and independent runs
+.gitmeta/
+.local/
+.snakemake/
+.agents/
+.codex/
+runs/
+workflow/config.yaml
+prefix_build.log
+__pycache__/
+*.pyc
+
+# Large generated matrices, FASTA links, intermediate counts and logs are
+# intentionally excluded. Curated summaries/figures are added explicitly.
+step0/
+step1/
+step2/
+step3/
+step4/
+valleprep-hsat23-inventory/
