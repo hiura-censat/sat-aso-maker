@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -69,6 +70,9 @@ def main():
     (output / 'scripts').mkdir()
     for path in scripts:
         shutil.copy2(path, output / 'scripts' / path.name)
+    for name, links in [('step0_scan', ['-lz']), ('step1_pack', ['-lz']), ('step2_count', []), ('step3_count', [])]:
+        subprocess.run(['g++', '-O3', '-std=c++17', str(output / 'scripts' / (name + '.cpp')), *links,
+                        '-o', str(output / 'scripts' / name)], check=True)
     shutil.copy2(config_path, output / 'workflow_config.yaml')
     old.write_text(json.dumps(snapshot, indent=2) + '\n')
 

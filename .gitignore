@@ -9,6 +9,11 @@ workflow/config.yaml
 prefix_build.log
 __pycache__/
 *.pyc
+scripts/scan72_chm13
+scripts/step0_scan
+scripts/step1_pack
+scripts/step2_count
+scripts/step3_count
 
 # Large generated matrices, FASTA links, intermediate counts and logs are
 # intentionally excluded. Curated summaries/figures are added explicitly.

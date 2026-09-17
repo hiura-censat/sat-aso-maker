@@ -6,6 +6,8 @@
 
 [config.example.yaml](config.example.yaml) を `workflow/config.yaml` にコピーし、自分の環境に合わせて編集します。`workflow/config.yaml` はローカル専用で Git 管理しません。以下の項目は計算に反映されます。
 
+実行前に Python 環境へ Snakemake、NumPy、PyYAML、samtools を用意し、`g++`、zlib 開発ライブラリ、R と `cluster` パッケージを使えるようにしてください。Jellyfish 2.3.1 の実行ファイルを `.local/bin/jellyfish` に配置し、`scripts/jellyfish-prefix12.patch` を適用した版を `.local/bin/jellyfish-prefix` に配置します。C++ scanner は最初の bootstrap ジョブがソースからビルドします。元 FASTA/BED は `source_root` に配置し、GitHub には含めません。
+
 | 項目 | 効果 |
 | --- | --- |
 | `run_id` | 独立した出力先 `runs/<run_id>/` |
