@@ -3,11 +3,13 @@ import csv,json
 import numpy as np
 from step3_prepare import ROOT,OUT,tsv
 from step2_pipeline import MANIFEST,STATS,CHROMS
+from workflow_settings import settings
 M=OUT/'mismatch'
 def summarize():
  queries=list(csv.DictReader((OUT/'candidates/mismatch_queries.tsv').open(),delimiter='\t'));nq=len(queries);nh=len(MANIFEST)
  allcounts=np.zeros((nq,nh,4,3),dtype=np.uint64);den=np.zeros((nh,4),dtype=np.uint64)
  positions=np.zeros((nq,nh,4,3,16));reference=np.array([r['sample']=='CHM13' for r in MANIFEST]);checked=[]
+ broad_min=int(np.ceil(settings()['selection']['broad_hap_fraction']*int((~reference).sum())))
  chromosome_counts=np.zeros((nq,nh,len(CHROMS),4,3),dtype=np.uint64);chromosome_den=np.zeros((nh,len(CHROMS),4),dtype=np.uint64);available=np.zeros((nh,len(CHROMS)),dtype=bool)
  for hi,r in enumerate(MANIFEST):
   h=r['hap'];qc=json.loads((M/'counts'/(h+'.json')).read_text());assert qc['zero_mismatch_matches_step1'] and qc['all_valid_windows_match_step0'] and qc['mismatch_position_accounting']
@@ -26,7 +28,7 @@ def summarize():
    with np.errstate(divide='ignore',invalid='ignore'):
     le=np.log2((lc[qi,:,fi,radius]/den[:,fi]+1e-9)/(lc[qi,:,3,radius]/den[:,3]+1e-9));lf=np.log2((lc[qi,:,fi,radius]/den[:,fi]+1e-9)/(lc[qi,:,other,radius]/den[:,other]+1e-9));lfrac=lc[qi,:,fi,radius]/(lc[qi,:,fi,radius]+lc[qi,:,other,radius])
    local=(lc[qi,:,fi,radius]>=10)&(le>10)&(lf>10)&(lfrac>=.999)&~reference
-   broad=int(local.sum());passed=bool(e>10 and ef>10 and fraction>=.999 and broad>=516);flags.append(passed)
+   broad=int(local.sum());passed=bool(e>10 and ef>10 and fraction>=.999 and broad>=broad_min);flags.append(passed)
    rows.append([qi,q['kmer_id'],q['canonical_kmer'],q['family'],q['selection_category'],radius,int(t),int(o),int(b),int(pool[qi,fi,radius]),int(pool[qi,other,radius]),int(pool[qi,3,radius]),float(e),float(ef),float(fraction),broad,int(passed)])
   decisions.append([q['kmer_id'],q['family'],q['selection_category'],*map(int,flags)])
  tsv(M/'pooled_mismatch_scores.tsv',['query_index','kmer_id','canonical_kmer','family','selection_category','max_mismatches','target_count_le_radius','other_family_count_le_radius','background_count_le_radius','target_count_exact_distance','other_family_count_exact_distance','background_count_exact_distance','target_vs_background_E','target_vs_other_family_E','target_family_count_fraction','strict_passing_nonreference_haps','passes_strict_pan_criteria'],rows)
@@ -53,7 +55,7 @@ def summarize():
  score_index={(int(r[0]),int(r[5])):r for r in rows}
  for qi,q in enumerate(queries):
   category=q['selection_category']
-  if not category.startswith('chr'):continue
+  if not category.startswith('chr') or category.startswith('chromosome_'):continue
   chrom,group,*_=category.split('_')
   exclusive=category.endswith('_specific')
   for radius in range(3):
@@ -78,8 +80,8 @@ def summarize():
  tsv(M/'mismatch_position_counts.tsv',['query_index','kmer_id','region','exact_distance','query_position_1based','weighted_count'],((qi,q['kmer_id'],region,d,pos+1,float(pp[qi,ri,d,pos])) for qi,q in enumerate(queries) for ri,region in enumerate(['HSat2','HSat3','HSat23','background']) for d in [1,2] for pos in range(16)))
  for d in range(3):np.testing.assert_array_equal(pp[:,:,d,:].sum(axis=2),pool[:,:,d]*d)
  np.savez_compressed(M/'hap_counts_and_positions.npz',counts=allcounts,valid_starts=den,position_counts=positions,chromosome_counts=chromosome_counts,chromosome_valid_starts=chromosome_den,chromosome_available=available,chromosomes=np.array(CHROMS),query_codes=np.array([int(q['kmer_id'][4:],16) for q in queries],dtype=np.uint32),haplotypes=np.array([r['hap'] for r in MANIFEST]),is_reference=reference)
- summary={'status':'PASS','queries':nq,'sequence_sets':nh,'nonreference_haps':int((~reference).sum()),'all_distance_zero_counts_match_step1':True,'all_valid_windows_match_step0':True,'position_count_identity_verified':True,'strict_pan_pass_counts_by_radius':[sum(int(r[3+i]) for r in decisions) for i in range(3)],'method':'exhaustive Hamming radius <=2 against both orientations, canonical window counted once per query; no indels','scope':'eligible T2T chromosomes, existing HSat2/3 annotations and their background complement'}
+ summary={'status':'PASS','queries':nq,'sequence_sets':nh,'nonreference_haps':int((~reference).sum()),'broad_haps_min':broad_min,'all_distance_zero_counts_match_step1':True,'all_valid_windows_match_step0':True,'position_count_identity_verified':True,'strict_pan_pass_counts_by_radius':[sum(int(r[3+i]) for r in decisions) for i in range(3)],'method':'exhaustive Hamming radius <=2 against both orientations, canonical window counted once per query; no indels','scope':'eligible T2T chromosomes, existing HSat2/3 annotations and their background complement'}
  summary['pan_selected_queries']=sum(q['selection_category']=='pan' for q in queries);summary['pan_selected_strict_pass_counts_by_radius']=[sum(int(r[3+i]) for r in decisions if r[2]=='pan') for i in range(3)]
- summary['selected_group_queries']=sum(q['selection_category'].startswith('chr') for q in queries);summary['group_family_and_chromosome_pass_by_radius']=[sum(r[9] for r in group_robust if r[6]==i) for i in range(3)]
+ summary['selected_group_queries']=sum(q['selection_category'].startswith('chr') and not q['selection_category'].startswith('chromosome_') for q in queries);summary['group_family_and_chromosome_pass_by_radius']=[sum(r[9] for r in group_robust if r[6]==i) for i in range(3)]
  (M/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2),flush=True)
 if __name__=='__main__':summarize()

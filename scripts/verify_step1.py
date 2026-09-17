@@ -11,6 +11,7 @@ for path,old in json.loads((S0/'input_metadata.json').read_text()).items():
  if old is None:assert not p.exists(),path
  else:assert {'size':p.stat().st_size,'mtime_ns':p.stat().st_mtime_ns}==old,path
 codes=np.fromfile(OUT/'preliminary_candidates.u32',dtype='<u4');assert len(codes)>0
+nonreference_haps=sum(r['sample']!='CHM13' for r in MANIFEST)
 assert np.all(np.diff(codes.astype(np.uint64))>0)
 assert np.all(codes<=revcodes(codes))
 seedhash=sha(OUT/'preliminary_candidates.u32')
@@ -36,7 +37,7 @@ with np.load(OUT/'pooled_counts_and_scores.npz') as z:
  pooled=(t>=CONFIG['min_pooled_target_count'])&(expected>CONFIG['min_log2_enrichment']);local=z['qualifying_haps']>0;selected=pooled|local
  assert np.array_equal(z['selected'],selected)
  assert np.array_equal(np.fromfile(OUT/'candidate_codes.u32',dtype='<u4'),codes[selected])
- assert np.all(z['prevalence_haps']<=573)
+ assert np.all(z['prevalence_haps']<=nonreference_haps)
  assert np.all(z['qualifying_haps']<=z['prevalence_haps'])
  expected_count=int(selected.sum())
 with (OUT/'candidate_kmers.tsv').open() as f:
@@ -49,6 +50,6 @@ with (OUT/'candidate_kmers.tsv').open() as f:
   assert row['kmer_id']==f'k16_{code:08x}' and code not in seen;seen.add(code)
  assert len(seen)==expected_count
  assert seen==set(map(int,codes[selected]))
-summary={'status':'PASS','sequence_sets':len(MANIFEST),'nonreference_haps':573,'preliminary_candidates':len(codes),'selected_candidates':expected_count,'all_target_counts_match_step0':True,'canonical_orientation_agreement':True,'source_metadata_unchanged':True,'selection_and_scores_verified':True,'background_counts_are_candidate_restricted':True,'python':sys.version,'jellyfish':'2.3.1'}
+summary={'status':'PASS','sequence_sets':len(MANIFEST),'nonreference_haps':nonreference_haps,'preliminary_candidates':len(codes),'selected_candidates':expected_count,'all_target_counts_match_step0':True,'canonical_orientation_agreement':True,'source_metadata_unchanged':True,'selection_and_scores_verified':True,'background_counts_are_candidate_restricted':True,'python':sys.version,'jellyfish':'2.3.1'}
 (OUT/'validation_summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 print(json.dumps(summary,indent=2))

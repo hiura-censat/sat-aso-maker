@@ -66,7 +66,7 @@ def main():
  group_lookup={(r['hap'],r['family'],r['chromosome']):r for r in read(ROOT/'step3/hap_chromosome_groups.tsv')}
  haprows=[];group_chr=[]
  with np.load(ROOT/'step4/mismatch/combined_hap_counts.npz') as z:
-  c=z['chromosome_counts'];den=z['chromosome_valid_starts'];av=z['chromosome_available'];haps=list(z['haplotypes']);codes=list(z['query_ids']);assert codes==ids and list(z['chromosomes'])==CHRS and len(haps)==574
+  c=z['chromosome_counts'];den=z['chromosome_valid_starts'];av=z['chromosome_available'];haps=list(z['haplotypes']);codes=list(z['query_ids']);assert codes==ids and list(z['chromosomes'])==CHRS and len(haps)==c.shape[1]
   for qi,kid in enumerate(ids):
    for ci,ch in enumerate(CHRS):
     for fi,fam in enumerate(['HSat2','HSat3']):assert counts[(kid,ch,'fine_'+fam)]==int(c[qi,0,ci,fi,0]),(kid,ch,fam)

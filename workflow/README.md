@@ -25,9 +25,11 @@
 
 STEP 3 の主解析は **HSat2/HSat3 × 染色体ごとに独立したクラスタリング**です。各染色体で注釈領域の有効窓がある非参照 hap だけを用い、測定可能 hap が100未満ならその組み合わせをスキップします。特徴量候補も染色体別 pooled count から最大5,000配列を選びます（高カウント側の半数と残りのカウント分布から均等抽出した半数）。その後の変動特徴の選択、正規化、PCA、階層クラスタリング、群判定も染色体ごとに行います。`step3/hap_chromosome_groups.tsv` に全 hap × family × 染色体の測定状態、群、未割当理由を記録します。同じ `G1` でも染色体が異なれば別群です。群特異的候補と mismatch 判定は、同一染色体で測定可能な hap の群内外だけを比較します。pan と染色体特異性の全染色体評価は維持します。これは HOROSCOPE の**染色体別解析単位**の採用であり、同論文の61-merや類似度式の再実装ではありません。
 
-STEP 4 の top 3 図は新しい ranking から pan-HSat3 配列を3件選びます。72配列図の群別集計も染色体内の群だけを表示します。旧解析で選んだ固定の3配列を強制しません。
+STEP 4 の top 3 図は新しい ranking から pan-HSat3 配列を3件選びます。mismatch評価は最大72配列で、候補数や多様性条件により72未満の場合も、その実数で後続処理と検証を行います。群別集計は染色体内の群だけを表示します。旧解析で選んだ固定の3配列を強制しません。
 
-`invariants.k=16` と `invariants.max_mismatches=2` は現在の C++ rolling counter、2-bit ID、0/1/2 mismatch 集計に埋め込まれた方法上の固定値です。別の値は起動時にエラーにします。STEP 3 の group 選択基準、STEP 4 の ASO screen と score の重みは現状の科学的手法として固定です。上記 `broad_hap_fraction` はSTEP 2 のフラグに作用し、STEP 3/4 の pan screen が要求する 90% を変更するものではありません。候補選択を極端に厳しくすると下流の pan/top 3 候補が不足し、明示的なエラーで停止する可能性があります。
+`invariants.k=16` と `invariants.max_mismatches=2` は現在の C++ rolling counter、2-bit ID、0/1/2 mismatch 集計に埋め込まれた方法上の固定値です。別の値は起動時にエラーにします。STEP 3 の group 選択基準、STEP 4 の ASO score の重みは現状の科学的手法として固定です。`broad_hap_fraction` はSTEP 2だけでなくSTEP 3/4のpan screenにも反映され、必要hap数は `ceil(non-reference hap数 × broad_hap_fraction)` で計算します。候補選択を極端に厳しくすると下流のpan/top 3候補が不足し、明示的なエラーで停止する可能性があります。
+
+STEP 3のcluster作成とgroup marker探索は、各family × chromosomeで選んだ最大5,000特徴を対象とします。これは計算量を制限する探索的解析であり、全STEP 2候補をcluster確定後に再スコアする独立検証ではありません。clusterとmarkerは同じhap cohortから推定されるため、群特異性は独立検証済み性能ではなく探索的な効果量として扱います。
 
 ## 実行と確認
 

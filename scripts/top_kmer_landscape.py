@@ -77,7 +77,7 @@ def main():
 
  with np.load(ROOT/'step4/mismatch/combined_hap_counts.npz') as z:
   counts=z['chromosome_counts'];den=z['chromosome_valid_starts'];av=z['chromosome_available'];ids=list(z['query_ids']);haps=list(z['haplotypes']);chroms=list(z['chromosomes'])
-  assert chroms==chrs and haps[0]=='chm13v2.0';assert len(haps)==574
+  assert chroms==chrs and haps[0]=='chm13v2.0' and len(haps)==counts.shape[1]
   rows=[];haptot=[];groupchrom=[]
   for kid in KIDS:
    qi=ids.index(kid)

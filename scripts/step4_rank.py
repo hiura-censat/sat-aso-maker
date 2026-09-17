@@ -29,7 +29,11 @@ def pct(v):
 def main():
  base=read(S2/'candidate_metrics.tsv.gz');idx={r['kmer_id']:i for i,r in enumerate(base)};codes=np.fromfile(S2/'candidate_codes.u32',dtype='<u4')
  with np.load(S1/'pooled_counts_and_scores.npz') as z:
-  i=np.searchsorted(z['codes'],codes);bg=z['counts'][i,3,:].sum(axis=1);unionE=z['log2_enrichment'][i]
+  i=np.searchsorted(z['codes'],codes);assert np.array_equal(z['codes'][i],codes)
+  bg=z['counts'][i,3,:].sum(axis=1);unionE=z['log2_enrichment'][i]
+  # Use the denominator saved by STEP1.  A literal here silently made rankings
+  # depend on an older STEP0 run.
+  background_valid_starts=int(z['valid_starts'][3])
  categories=defaultdict(list);details={}
  for family in ['HSat2','HSat3']:
   for r in read(S3/'candidates'/f'{family}_pan_exact.tsv'):categories[r['kmer_id']].append(f'pan_{family}');details[(r['kmer_id'],f'pan_{family}')]=r
@@ -39,7 +43,7 @@ def main():
  selected=[]
  for kid,cats in categories.items():
   r=base[idx[kid]].copy();seq=r['canonical_kmer'];gc,run,entropy,stem,quality=q(seq);h2=int(r['HSat2_count']);h3=int(r['HSat3_count']);family='HSat2' if h2>=h3 else 'HSat3';fi=0 if family=='HSat2' else 1
-  target=max(h2,h3);other=min(h2,h3);familyE=abs(float(r['log2_HSat2_vs_HSat3_density']));familyfrac=max(float(r['HSat2_count_fraction']),1-float(r['HSat2_count_fraction']));backgroundE=math.log2((float(r[family+'_density_per_M'])/1e6+1e-9)/(bg[idx[kid]]/(1174472388960)+1e-9))
+  target=max(h2,h3);other=min(h2,h3);familyE=abs(float(r['log2_HSat2_vs_HSat3_density']));familyfrac=max(float(r['HSat2_count_fraction']),1-float(r['HSat2_count_fraction']));backgroundE=math.log2((float(r[family+'_density_per_M'])/1e6+1e-9)/(bg[idx[kid]]/background_valid_starts+1e-9))
   selected.append({'kmer_id':kid,'canonical_kmer':seq,'reverse_complement':rev(seq),'target_family':family,'categories':';'.join(sorted(cats)),'target_count':target,'other_family_count':other,'family_count_fraction':familyfrac,'family_log2_enrichment':familyE,'background_count':int(bg[idx[kid]]),'family_background_log2_enrichment':backgroundE,'union_background_log2_enrichment':float(unionE[idx[kid]]),'target_prevalence_haps':int(r[family+'_prevalence_haps']),'union_prevalence_haps':int(r['union_prevalence_haps']),'GC_percent':gc,'max_homopolymer':run,'base_entropy_bits':entropy,'self_complementary_stem_proxy':stem,'sequence_quality_score':quality})
  # Scores are empirical percentiles within the integrated exact candidate universe.
  for family in ['HSat2','HSat3']:
@@ -84,6 +88,6 @@ def main():
  for i,r in enumerate(queries):r['query_index']=i
  fields=['query_index','kmer_id','canonical_kmer','reverse_complement','target_family','query_category','query_origin','exact_composite_score','family_background_log2_enrichment','family_log2_enrichment','family_count_fraction','target_prevalence_haps','background_count','GC_percent','max_homopolymer','self_complementary_stem_proxy']
  write(OUT/'mismatch/queries.tsv',queries,fields)
- summary={'integrated_exact_candidates':len(selected),'exact_candidates_by_family':{f:sum(r['target_family']==f for r in selected) for f in ['HSat2','HSat3']},'diverse_shortlist_entries':len(shortlist),'mismatch_queries':len(queries),'mismatch_existing_STEP3':sum(r['query_origin']=='STEP3' for r in queries),'mismatch_new_STEP4':sum(r['query_origin']=='STEP4' for r in queries),'score_weights':{'target_abundance':.20,'family_specificity':.20,'background_enrichment':.20,'hap_coverage':.15,'absolute_background':.10,'sequence_quality_proxy':.15},'score_normalization':'empirical percentile separately within HSat2 and HSat3 integrated universes','quality_scope':'sequence-only proxy; no chemistry, Tm, RNA structure, transcriptome or expression','validation':'PASS'}
+ summary={'integrated_exact_candidates':len(selected),'exact_candidates_by_family':{f:sum(r['target_family']==f for r in selected) for f in ['HSat2','HSat3']},'diverse_shortlist_entries':len(shortlist),'mismatch_query_cap':72,'mismatch_queries':len(queries),'mismatch_existing_STEP3':sum(r['query_origin']=='STEP3' for r in queries),'mismatch_new_STEP4':sum(r['query_origin']=='STEP4' for r in queries),'background_valid_starts':background_valid_starts,'score_weights':{'target_abundance':.20,'family_specificity':.20,'background_enrichment':.20,'hap_coverage':.15,'absolute_background':.10,'sequence_quality_proxy':.15},'score_normalization':'empirical percentile separately within HSat2 and HSat3 integrated universes','quality_scope':'sequence-only proxy; no chemistry, Tm, RNA structure, transcriptome or expression','validation':'PASS'}
  (OUT/'ranking_summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2),flush=True)
 if __name__=='__main__':main()

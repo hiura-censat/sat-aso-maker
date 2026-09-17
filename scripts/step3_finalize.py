@@ -35,7 +35,7 @@ def finalize():
     assert min(np.bincount(labels)[1:])>=10
     assert float(case['selection']['silhouette'])>=.25 and float(case['selection']['median_subsample_ARI'])>=.75 and float(case['selection']['median_worst_cluster_Jaccard'])>=.75
  groups=list(csv.DictReader((OUT/'hap_chromosome_groups.tsv').open(),delimiter='\t'))
- assert len(groups)==574*2*len(meta['chromosomes'])
+ assert len(groups)==len(meta['haplotypes'])*2*len(meta['chromosomes'])
  lookup={(r['hap'],r['family'],r['chromosome']):r for r in groups}
  assert len(lookup)==len(groups)
  for hi,hap in enumerate(meta['haplotypes']):
@@ -51,18 +51,18 @@ def finalize():
   for vi,_,d,m1,m2 in r:
    qseq=seq(q);v=seq(vc[vi]);rv=seq(revcode(int(vc[vi])));a=sum(x!=y for x,y in zip(qseq,v));b=sum(x!=y for x,y in zip(qseq,rv));assert min(a,b)==d;assert int(m1).bit_count()==int(m2).bit_count()==d
  # Audit saved variants against spectra for 12 evenly spaced haps, independently of serialization.
- for hi in np.linspace(0,573,12,dtype=int):
+ for hi in np.linspace(0,len(meta['haplotypes'])-1,min(12,len(meta['haplotypes'])),dtype=int):
   h=str(meta['haplotypes'][hi]);path=OUT/'mismatch'
   with np.load(path/'variants'/(h+'.npz')) as z:c=z['counts']
   aggregate=np.zeros((len(qc)*3,c.shape[1],4),dtype=np.uint64);np.add.at(aggregate,records[:,1]*3+records[:,2],c[records[:,0]])
   with np.load(path/'counts'/(h+'.npz')) as z:assert np.array_equal(aggregate.reshape(len(qc),3,c.shape[1],4).transpose(0,2,3,1),z['counts'])
  for h in meta['haplotypes']:
   m=json.loads((OUT/'mismatch/counts'/(str(h)+'.json')).read_text());assert m['zero_mismatch_matches_step1'] and m['all_valid_windows_match_step0'] and m['mismatch_position_accounting']
- mm=json.loads((OUT/'mismatch/summary.json').read_text());assert mm['status']=='PASS' and mm['sequence_sets']==574
+ mm=json.loads((OUT/'mismatch/summary.json').read_text());assert mm['status']=='PASS' and mm['sequence_sets']==len(meta['haplotypes'])
  with (OUT/'logs/plots.log').open('w') as log:subprocess.run(['Rscript',str(ROOT/'scripts/plot_step3.R')],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
  assert len(list((OUT/'plots').glob('*.png')))>=2
- validation={'status':'PASS','source_metadata_unchanged':True,'chromosome_clusters_reconstructed_from_measurable_haps':True,'reference_excluded_from_fitting':True,'missing_chromosome_haps_unassigned':True,'representative_correlations_below_0.95':True,'cluster_acceptance_criteria_verified':True,'all_radius_2_neighborhoods_exhaustive_and_deduplicated':True,'variant_spectrum_serialization_audit_haps':12,'all_574_hap_exact_counts_match_step1':True,'mismatch_position_accounting_verified':True}
+ validation={'status':'PASS','source_metadata_unchanged':True,'chromosome_clusters_reconstructed_from_measurable_haps':True,'reference_excluded_from_fitting':True,'missing_chromosome_haps_unassigned':True,'representative_correlations_below_0.95':True,'cluster_acceptance_criteria_verified':True,'all_radius_2_neighborhoods_exhaustive_and_deduplicated':True,'variant_spectrum_serialization_audit_haps':min(12,len(meta['haplotypes'])),'all_hap_exact_counts_match_step1':True,'mismatch_position_accounting_verified':True}
  (OUT/'validation_summary.json').write_text(json.dumps(validation,indent=2)+'\n')
- summary={'status':'complete','chromosome_family_cases':len(summaries),'supported_chromosome_partitions':sum(x['supported_partition'] for x in summaries),'mismatch_queries':mm['queries'],'mismatch_sequence_sets':574,'strict_pan_pass_counts_by_radius':mm['strict_pan_pass_counts_by_radius'],'interpretation':'Independent family-by-chromosome groups; no whole-genome hap group is defined.'}
+ summary={'status':'complete','chromosome_family_cases':len(summaries),'supported_chromosome_partitions':sum(x['supported_partition'] for x in summaries),'mismatch_queries':mm['queries'],'mismatch_sequence_sets':len(meta['haplotypes']),'strict_pan_pass_counts_by_radius':mm['strict_pan_pass_counts_by_radius'],'interpretation':'Independent family-by-chromosome groups; no whole-genome hap group is defined.'}
  (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');validation['finished_at']=time.strftime('%Y-%m-%dT%H:%M:%S%z');validation['script_sha256']={p.name:sha(p) for p in (ROOT/'scripts').glob('*step3*') if p.is_file()};(OUT/'COMPLETE.json').write_text(json.dumps(validation,indent=2)+'\n');print(json.dumps(summary,indent=2),flush=True)
 if __name__=='__main__':finalize()

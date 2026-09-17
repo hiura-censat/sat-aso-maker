@@ -3,6 +3,7 @@
 import csv,gzip,json,time
 import numpy as np
 from step2_pipeline import OUT,S1,MANIFEST,CHROMS,REGIONS,write_tsv,sha
+from workflow_settings import settings
 
 def ratio(a,b):
  return np.divide(a,b,out=np.full(np.broadcast_shapes(np.shape(a),np.shape(b)),np.nan),where=np.asarray(b)>0)
@@ -79,6 +80,7 @@ def summarize():
   rank=np.argsort(-fd[:,ri],kind='stable');ids.extend([int(i) for i in rank if pooled_mask[i]][:15])
  ids=list(dict.fromkeys(ids));heat=ratio(density[ids,:,2],np.nanmax(density[ids,:,2],axis=1)[:,None])
  write_tsv(P/'chromosome_heatmap.tsv',['kmer_id']+CHROMS,([candidate_rows[i]['kmer_id']]+heat[j].tolist() for j,i in enumerate(ids)))
- summary={'candidate_count':n,'sequence_sets':nh,'nonreference_haps':int(nonref.sum()),'reference':'chm13v2.0','observed_hap_chromosome_pairs':int(availability.sum()),'pooled_E_gt_10_candidates':int(pooled_mask.sum()),'pooled_and_broad90_candidates':sum(int(r['pooled_and_broad90_E_gt_10']) for r in candidate_rows),'ambiguous_valid_starts':int(den[:,:,3].sum()),'HSat2_count_fraction_ge_0.9':int((family_share>=.9).sum()),'HSat3_count_fraction_ge_0.9':int((family_share<=.1).sum()),'union_max_chr_count_fraction_ge_0.9':int((chr_results['HSat23'][0]>=.9).sum()),'union_prevalence_ge_90pct':int((prev>=516).sum()),'matrix_A_shape':[n,nh],'matrix_B_shape':[n,nh*2],'matrix_C_family_columns_including_missing':len(columns),'step1_per_hap_agreement':True,'counts_dtype':'uint64','density_unit':'counts per million valid 16-mer starts'}
+ broad_min=int(np.ceil(settings()['selection']['broad_hap_fraction']*int(nonref.sum())))
+ summary={'candidate_count':n,'sequence_sets':nh,'nonreference_haps':int(nonref.sum()),'broad_haps_min':broad_min,'reference':'chm13v2.0','observed_hap_chromosome_pairs':int(availability.sum()),'pooled_E_gt_10_candidates':int(pooled_mask.sum()),'pooled_and_broad_threshold_candidates':sum(int(r['pooled_and_broad90_E_gt_10']) for r in candidate_rows),'ambiguous_valid_starts':int(den[:,:,3].sum()),'HSat2_count_fraction_ge_0.9':int((family_share>=.9).sum()),'HSat3_count_fraction_ge_0.9':int((family_share<=.1).sum()),'union_max_chr_count_fraction_ge_0.9':int((chr_results['HSat23'][0]>=.9).sum()),'union_prevalence_ge_broad_threshold':int((prev>=broad_min).sum()),'matrix_A_shape':[n,nh],'matrix_B_shape':[n,nh*2],'matrix_C_family_columns_including_missing':len(columns),'step1_per_hap_agreement':True,'counts_dtype':'uint64','density_unit':'counts per million valid 16-mer starts'}
  (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2),flush=True)
 if __name__=='__main__':summarize()

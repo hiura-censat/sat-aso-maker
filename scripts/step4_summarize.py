@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from step3_prepare import ROOT
 from step2_pipeline import MANIFEST, CHROMS
+from workflow_settings import settings
 
 S3=ROOT/'step3'; S4=ROOT/'step4'; M=S4/'mismatch'
 REGIONS=['HSat2','HSat3','HSat23','background']
@@ -50,6 +51,7 @@ def load_merged():
 def main():
     q,c,den,pos,avail=load_merged(); nq,nh,nc,_,_=c.shape
     ref=np.array([r['sample']=='CHM13' for r in MANIFEST]); non=~ref
+    broad_min=int(np.ceil(settings()['selection']['broad_hap_fraction']*int(non.sum())))
     total=c.sum(axis=2); pool=c[:,non].sum(axis=(1,2)); poolden=den[non].sum(axis=(0,1)); cum=pool.cumsum(axis=2); local=total.cumsum(axis=3)
     pooled=[]; robust=[]
     for qi,x in enumerate(q):
@@ -62,7 +64,7 @@ def main():
                 lf=np.log2((local[qi,:,fi,radius]/den.sum(axis=1)[:,fi]+1e-9)/(local[qi,:,oi,radius]/den.sum(axis=1)[:,oi]+1e-9))
                 lfrac=local[qi,:,fi,radius]/(local[qi,:,fi,radius]+local[qi,:,oi,radius])
             good=non&(local[qi,:,fi,radius]>=10)&(le>10)&(lf>10)&(lfrac>=.999)
-            broad=int(good.sum()); passed=eb>10 and ef>10 and frac>=.999 and broad>=516; flags.append(passed)
+            broad=int(good.sum()); passed=eb>10 and ef>10 and frac>=.999 and broad>=broad_min; flags.append(passed)
             pooled.append(dict(query_index=qi,kmer_id=x['kmer_id'],canonical_kmer=x['canonical_kmer'],target_family=fam,query_category=x['query_category'],max_mismatches=radius,target_count_le_radius=t,other_family_count_le_radius=o,background_count_le_radius=b,target_vs_background_E=eb,target_vs_other_family_E=ef,target_family_count_fraction=frac,strict_passing_nonreference_haps=broad,passes_strict_pan_criteria=int(passed)))
         tier='A_le2mm' if flags[2] else ('B_le1mm' if flags[1] else ('C_exact' if flags[0] else 'D_fails_exact_strict'))
         robust.append(dict(kmer_id=x['kmer_id'],strict_pan_pass_0mm=int(flags[0]),strict_pan_pass_le1mm=int(flags[1]),strict_pan_pass_le2mm=int(flags[2]),robustness_tier=tier))
@@ -132,7 +134,7 @@ def main():
             category_note=f'{chrom} {wanted} '+('specific' if specific else 'enriched')
         cat_tier='A_le2mm' if category_pass[2] else ('B_le1mm' if category_pass[1] else ('C_exact' if category_pass[0] else 'D_fails_exact'))
         # Smooth mismatch score, bounded and transparent; strict tiers remain separate columns.
-        mm=(min(1,max(0,fnum(p2['target_vs_background_E'])/10))*.30 + min(1,max(0,fnum(p2['target_vs_other_family_E'])/10))*.25 + min(1,max(0,(fnum(p2['target_family_count_fraction'])-.9)/.1))*.20 + min(1,int(p2['strict_passing_nonreference_haps'])/516)*.25)
+        mm=(min(1,max(0,fnum(p2['target_vs_background_E'])/10))*.30 + min(1,max(0,fnum(p2['target_vs_other_family_E'])/10))*.25 + min(1,max(0,(fnum(p2['target_family_count_fraction'])-.9)/.1))*.20 + min(1,int(p2['strict_passing_nonreference_haps'])/broad_min)*.25)
         score=.55*fnum(e['exact_composite_score'])+.35*mm+.10*(1 if category_pass[2] else (.6 if category_pass[1] else (.3 if category_pass[0] else 0)))
         ranked.append(dict(kmer_id=x['kmer_id'],canonical_target_5to3=x['canonical_kmer'],reverse_complement_target_5to3=x['reverse_complement'],aso_5to3_if_canonical_target_is_transcribed=x['reverse_complement'],aso_5to3_if_reverse_complement_target_is_transcribed=x['canonical_kmer'],target_family=x['target_family'],candidate_type=typ,query_category=x['query_category'],query_origin=x['query_origin'],sequence_class=classes[qi],final_score=score,exact_composite_score=e['exact_composite_score'],mismatch_score=mm,strict_pan_robustness_tier=ridx[x['kmer_id']]['robustness_tier'],category_robustness_tier=cat_tier,category_interpretation=category_note,passes_category_0mm=int(category_pass[0]),passes_category_le1mm=int(category_pass[1]),passes_category_le2mm=int(category_pass[2]),target_vs_background_E_le2mm=p2['target_vs_background_E'],target_vs_other_family_E_le2mm=p2['target_vs_other_family_E'],target_family_fraction_le2mm=p2['target_family_count_fraction'],strict_passing_haps_le2mm=p2['strict_passing_nonreference_haps'],GC_percent=e['GC_percent'],max_homopolymer=e['max_homopolymer'],self_complementary_stem_proxy=e['self_complementary_stem_proxy']))
     ranked.sort(key=lambda r:(r['target_family'],r['candidate_type'],-r['final_score']))
@@ -147,6 +149,6 @@ def main():
     write(M/'mismatch_position_counts.tsv',(dict(query_index=qi,kmer_id=x['kmer_id'],region=REGIONS[ri],exact_distance=d,query_position_1based=k+1,weighted_count=int(pp[qi,ri,d,k])) for qi,x in enumerate(q) for ri in range(4) for d in [1,2] for k in range(16)))
     for d in range(3): np.testing.assert_array_equal(pp[:,:,d,:].sum(axis=2),pool[:,:,d]*d)
     np.savez_compressed(M/'combined_hap_counts.npz',counts=total,valid_starts=den.sum(axis=1),chromosome_counts=c,chromosome_valid_starts=den,chromosome_available=avail,position_counts=pos,query_ids=np.array([x['kmer_id'] for x in q]),haplotypes=np.array([r['hap'] for r in MANIFEST]),is_reference=ref,chromosomes=np.array(CHROMS))
-    summary={'status':'PASS','queries':nq,'reused_STEP3_queries':sum(x['query_origin']=='STEP3' for x in q),'new_STEP4_queries':sum(x['query_origin']=='STEP4' for x in q),'sequence_sets':nh,'nonreference_haps':int(non.sum()),'strict_pan_pass_counts_by_radius':[sum(int(r[f'strict_pan_pass_{"0mm" if d==0 else "le"+str(d)+"mm"}']) for r in robust) for d in range(3)],'category_pass_counts_by_radius':[sum(int(r[f'passes_category_{"0mm" if d==0 else "le"+str(d)+"mm"}']) for r in ranked) for d in range(3)],'robustness_tiers':dict((t,sum(r['category_robustness_tier']==t for r in ranked)) for t in ['A_le2mm','B_le1mm','C_exact','D_fails_exact']),'method':'exhaustive Hamming radius <=2 against both orientations; no indels','scope':'eligible T2T chromosomes and existing HSat2/3 BED annotations'}
+    summary={'status':'PASS','queries':nq,'reused_STEP3_queries':sum(x['query_origin']=='STEP3' for x in q),'new_STEP4_queries':sum(x['query_origin']=='STEP4' for x in q),'sequence_sets':nh,'nonreference_haps':int(non.sum()),'broad_haps_min':broad_min,'strict_pan_pass_counts_by_radius':[sum(int(r[f'strict_pan_pass_{"0mm" if d==0 else "le"+str(d)+"mm"}']) for r in robust) for d in range(3)],'category_pass_counts_by_radius':[sum(int(r[f'passes_category_{"0mm" if d==0 else "le"+str(d)+"mm"}']) for r in ranked) for d in range(3)],'robustness_tiers':dict((t,sum(r['category_robustness_tier']==t for r in ranked)) for t in ['A_le2mm','B_le1mm','C_exact','D_fails_exact']),'method':'exhaustive Hamming radius <=2 against both orientations; no indels','scope':'eligible T2T chromosomes and existing HSat2/3 BED annotations'}
     (M/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))
 if __name__=='__main__': main()
