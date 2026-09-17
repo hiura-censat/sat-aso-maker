@@ -1,5 +1,7 @@
 # STEP 4: ASO candidate classification and prioritization
 
+> 以下は共通 core 群を使った旧方式の保存済み結果です。新ワークフローでは群特異的候補と mismatch 評価を family × 染色体単位で行います。新方式の結果は別の `runs/<run_id>/` に保存します。
+
 ## 目的
 
 STEP 1–3の結果を統合し、HSat2/HSat3を標的とする16-merを、次の用途別に優先順位付けする。

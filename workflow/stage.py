@@ -80,7 +80,7 @@ def main():
         'step1_finish': ['step1/COMPLETE.json', 'step1/pooled_counts_and_scores.npz'],
         'step2_finish': ['step2/COMPLETE.json', 'step2/matrices/matrix_A_counts.npy'],
         'step3_prepare': ['step3/data/PREPARED.json'],
-        'step3_run': ['step3/COMPLETE.json', 'step3/hap_groups.tsv'],
+        'step3_run': ['step3/COMPLETE.json', 'step3/hap_chromosome_groups.tsv'],
         'step4_rank': ['step4/mismatch/queries.tsv', 'step4/ranked/all_exact_ranked.tsv.gz'],
         'step4_neighbors': ['step4/mismatch/variant_mapping.npz'],
         'step4_finish': ['step4/COMPLETE.json', 'step4/ranked/mismatch_evaluated_ranked.tsv'],

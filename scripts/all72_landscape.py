@@ -63,32 +63,34 @@ def main():
  write(OUT/'chm13_candidate_censat_summary.tsv',candidate,list(candidate[0]))
  binrows=[dict(kmer_id=kid,chromosome=ch,bin_100kb=b,bin_start_0based=b*100000,outside_broad_CenSat=outside,exact_hits=count) for (kid,ch,b,outside),count in bins.items()]
  write(OUT/'chm13_100kb_bins.tsv',sorted(binrows,key=lambda r:(ids.index(r['kmer_id']),CHRS.index(r['chromosome']),r['bin_100kb'],r['outside_broad_CenSat'])),list(binrows[0]))
- groups={r['hap']:r for r in read(ROOT/'step3/hap_groups.tsv')};haprows=[];group_total=[];group_chr=[]
+ group_lookup={(r['hap'],r['family'],r['chromosome']):r for r in read(ROOT/'step3/hap_chromosome_groups.tsv')}
+ haprows=[];group_chr=[]
  with np.load(ROOT/'step4/mismatch/combined_hap_counts.npz') as z:
   c=z['chromosome_counts'];den=z['chromosome_valid_starts'];av=z['chromosome_available'];haps=list(z['haplotypes']);codes=list(z['query_ids']);assert codes==ids and list(z['chromosomes'])==CHRS and len(haps)==574
-  # Independently scanned fine HSat2/HSat3 coordinates must reproduce STEP4's CHM13 0-mm matrix per chromosome.
   for qi,kid in enumerate(ids):
    for ci,ch in enumerate(CHRS):
     for fi,fam in enumerate(['HSat2','HSat3']):assert counts[(kid,ch,'fine_'+fam)]==int(c[qi,0,ci,fi,0]),(kid,ch,fam)
-  detail=OUT/'hap_chromosome_exact_counts.tsv.gz';fields2=['kmer_id','target_family','hap','group','group_status','chromosome','chromosome_available','target_family_exact_hits','target_family_valid_16mer_starts','target_family_density_per_M','HSat23_union_exact_hits','background_exact_hits','union_plus_background_exact_hits']
+  detail=OUT/'hap_chromosome_exact_counts.tsv.gz'
+  fields2=['kmer_id','target_family','hap','group','group_status','chromosome','chromosome_available','target_family_exact_hits','target_family_valid_16mer_starts','target_family_density_per_M','HSat23_union_exact_hits','background_exact_hits','union_plus_background_exact_hits']
   with gzip.open(detail,'wt') as f:
    w=csv.DictWriter(f,fieldnames=fields2,delimiter='\t');w.writeheader()
    for qi,kid in enumerate(ids):
-    fam=fams[kid];fi=['HSat2','HSat3'].index(fam);grpfield=fam+'_group';statusfield=fam+'_status';group_names=sorted({row[grpfield] for row in groups.values() if row[grpfield].startswith('G')})
+    fam=fams[kid];fi=['HSat2','HSat3'].index(fam)
     for hi,hap in enumerate(haps):
-     group=groups[hap][grpfield] if hi else 'reference';status=groups[hap][statusfield];target=int(c[qi,hi,:,fi,0].sum());windows=int(den[hi,:,fi].sum());union=int(c[qi,hi,:,2,0].sum());bg=int(c[qi,hi,:,3,0].sum())
-     haprows.append(dict(kmer_id=kid,target_family=fam,hap=hap,group=group,group_status=status,target_family_exact_hits=target,target_family_valid_16mer_starts=windows,target_family_density_per_M=target/windows*1e6 if windows else '',HSat23_union_exact_hits=union,background_exact_hits=bg,union_plus_background_exact_hits=union+bg))
+     target=int(c[qi,hi,:,fi,0].sum());windows=int(den[hi,:,fi].sum());union=int(c[qi,hi,:,2,0].sum());bg=int(c[qi,hi,:,3,0].sum())
+     haprows.append(dict(kmer_id=kid,target_family=fam,hap=hap,target_family_exact_hits=target,target_family_valid_16mer_starts=windows,target_family_density_per_M=target/windows*1e6 if windows else '',HSat23_union_exact_hits=union,background_exact_hits=bg,union_plus_background_exact_hits=union+bg))
      for ci,ch in enumerate(CHRS):
-      n1=int(c[qi,hi,ci,fi,0]);d=int(den[hi,ci,fi]);u=int(c[qi,hi,ci,2,0]);b=int(c[qi,hi,ci,3,0]);w.writerow(dict(kmer_id=kid,target_family=fam,hap=hap,group=group,group_status=status,chromosome=ch,chromosome_available=int(av[hi,ci]),target_family_exact_hits=n1,target_family_valid_16mer_starts=d,target_family_density_per_M=n1/d*1e6 if d else '',HSat23_union_exact_hits=u,background_exact_hits=b,union_plus_background_exact_hits=u+b))
-    for group in group_names+['NA']:
-     hi=np.array([j for j,hap in enumerate(haps) if j>0 and groups[hap][grpfield]==group]);if_n=len(hi)
-     assert if_n>0
-     vals=c[qi,hi,:,fi,0].sum(axis=1).astype(float);d=den[hi,:,fi].sum(axis=1).astype(float);density=vals[d>0]/d[d>0]*1e6
-     group_total.append(dict(kmer_id=kid,target_family=fam,group=group,hap_count=if_n,median_target_hits=float(np.median(vals)),mean_target_hits=float(vals.mean()),q25_target_hits=float(np.quantile(vals,.25)),q75_target_hits=float(np.quantile(vals,.75)),median_target_density_per_M=float(np.median(density)) if len(density) else '',measurable_haps=len(density)))
-     for ci,ch in enumerate(CHRS):
-      measurable=av[hi,ci]&(den[hi,ci,fi]>0);v=c[qi,hi[measurable],ci,fi,0].astype(float);dw=den[hi[measurable],ci,fi].astype(float)
-      group_chr.append(dict(kmer_id=kid,target_family=fam,group=group,chromosome=ch,available_haps=int(av[hi,ci].sum()),measurable_haps=len(v),median_target_hits=float(np.median(v)) if len(v) else '',mean_target_hits=float(v.mean()) if len(v) else '',pooled_target_density_per_M=float(v.sum()/dw.sum()*1e6) if len(v) else '',presence_ge10_fraction=float((v>=10).mean()) if len(v) else ''))
- write(OUT/'hap_total_exact_counts.tsv.gz',haprows,list(haprows[0]));write(OUT/'group_total_summary.tsv',group_total,list(group_total[0]));write(OUT/'group_chromosome_summary.tsv',group_chr,list(group_chr[0]))
- summary={'status':'PASS','queries':72,'CHM13_exact_hits':n,'sequence_sets':574,'hap_chromosome_rows':72*574*24,'fine_HSat2_and_HSat3_intervals_match_STEP0':True,'all_72_CHM13_fine_family_counts_match_STEP4_matrix':True,'broad_CenSat_BED':str(BROAD),'broad_CenSat_BED_sha256':sha(BROAD),'fine_CenSat_BED':str(FINE),'fine_CenSat_BED_sha256':sha(FINE),'coordinate_system':'0-based half-open exact 16-mers, canonical and reverse complement','group_scope':'STEP3 regional common-core groups; NA means incomplete core'}
+      gr=group_lookup[(hap,fam,ch)];n1=int(c[qi,hi,ci,fi,0]);d=int(den[hi,ci,fi]);u=int(c[qi,hi,ci,2,0]);bb=int(c[qi,hi,ci,3,0])
+      w.writerow(dict(kmer_id=kid,target_family=fam,hap=hap,group=gr['group'],group_status=gr['status'],chromosome=ch,chromosome_available=int(av[hi,ci]),target_family_exact_hits=n1,target_family_valid_16mer_starts=d,target_family_density_per_M=n1/d*1e6 if d else '',HSat23_union_exact_hits=u,background_exact_hits=bb,union_plus_background_exact_hits=u+bb))
+    for ci,ch in enumerate(CHRS):
+     groups=sorted({group_lookup[(hap,fam,ch)]['group'] for hap in haps[1:] if group_lookup[(hap,fam,ch)]['group']!='NA'})
+     for group in groups:
+      chosen=np.array([hi for hi,hap in enumerate(haps) if hi>0 and group_lookup[(hap,fam,ch)]['group']==group],dtype=int)
+      assert len(chosen)>0 and np.all(den[chosen,ci,fi]>0)
+      v=c[qi,chosen,ci,fi,0].astype(float);dw=den[chosen,ci,fi].astype(float)
+      group_chr.append(dict(kmer_id=kid,target_family=fam,group=group,chromosome=ch,measurable_haps=len(chosen),median_target_hits=float(np.median(v)),mean_target_hits=float(v.mean()),pooled_target_density_per_M=float(v.sum()/dw.sum()*1e6),presence_ge10_fraction=float((v>=10).mean())))
+ write(OUT/'hap_total_exact_counts.tsv.gz',haprows,list(haprows[0]))
+ write(OUT/'group_chromosome_summary.tsv',group_chr,list(group_chr[0]) if group_chr else ['kmer_id','target_family','group','chromosome','measurable_haps','median_target_hits','mean_target_hits','pooled_target_density_per_M','presence_ge10_fraction'])
+ summary={'status':'PASS','queries':len(ids),'CHM13_exact_hits':n,'sequence_sets':len(haps),'hap_chromosome_rows':len(ids)*len(haps)*24,'fine_HSat2_and_HSat3_intervals_match_STEP0':True,'all_72_CHM13_fine_family_counts_match_STEP4_matrix':True,'broad_CenSat_BED':str(BROAD),'broad_CenSat_BED_sha256':sha(BROAD),'fine_CenSat_BED':str(FINE),'fine_CenSat_BED_sha256':sha(FINE),'coordinate_system':'0-based half-open exact 16-mers, canonical and reverse complement','group_scope':'independent family-by-chromosome groups; NA means missing or unsupported'}
  (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2))
 if __name__=='__main__':main()

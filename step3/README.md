@@ -1,5 +1,7 @@
 # STEP 3: regional haplotype patterns and mismatch evaluation
 
+> 以下はルート `step3/` に保存された旧方式の結果です。現在の Snakemake ワークフローでは family × 染色体ごとに独立してクラスタリングし、`hap_chromosome_groups.tsv` を出力します。異なる染色体間で群ラベルを共有しません。新方式の詳細は [workflow README](../workflow/README.md)を参照してください。
+
 STEP 2の159,988候補を出発点に、HSat2・HSat3別のクラスタリング、候補のグループ比較、24代表配列の0–2 mismatch評価を行います。元のSTEP 1/2は変更していません。`COMPLETE.json`は全工程と最終検証が完了した場合だけ作成します。
 
 ## 結果の解釈

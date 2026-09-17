@@ -33,8 +33,8 @@ def main():
  categories=defaultdict(list);details={}
  for family in ['HSat2','HSat3']:
   for r in read(S3/'candidates'/f'{family}_pan_exact.tsv'):categories[r['kmer_id']].append(f'pan_{family}');details[(r['kmer_id'],f'pan_{family}')]=r
-  for p in sorted((S3/'candidates').glob(f'{family}_G*_markers.tsv')):
-   for r in read(p):categories[r['kmer_id']].append(f"regional_{family}_{r['group']}_{r['category']}");details[(r['kmer_id'],categories[r['kmer_id']][-1])]=r
+  for p in sorted((S3/'candidates').glob(f'{family}_chr*_G*_markers.tsv')):
+   for r in read(p):categories[r['kmer_id']].append(f"regional_{family}_{r['chromosome']}_{r['group']}_{r['category']}");details[(r['kmer_id'],categories[r['kmer_id']][-1])]=r
   for r in read(S3/'candidates'/f'{family}_chromosome_exact.tsv'):categories[r['kmer_id']].append(f"chromosome_{family}_{r['dominant_chromosome']}");details[(r['kmer_id'],categories[r['kmer_id']][-1])]=r
  selected=[]
  for kid,cats in categories.items():

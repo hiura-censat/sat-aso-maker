@@ -81,22 +81,23 @@ def main():
             chrom.append(dict(query_index=qi,kmer_id=x['kmer_id'],target_family=x['target_family'],query_category=x['query_category'],max_mismatches=radius,dominant_chromosome=CHROMS[best] if tot else 'NA',max_target_count_fraction=frac,informative_haps=n,same_unique_dominant_chromosome_haps=support,recurrence_fraction=rec,passes_chromosome_screen=int(frac>=.9 and rec>=.8 and n>=100)))
     write(M/'chromosome_robustness.tsv',chrom)
 
-    # Regional group contrasts use the same complete core chromosome subset as STEP3 clustering.
-    groups=[]; config=json.loads((S3/'config.json').read_text())
-    for fam in ['HSat2','HSat3']:
-        fi=['HSat2','HSat3'].index(fam)
-        with np.load(S3/'clustering'/(fam+'_core')/'model.npz') as z: hi=z['hap_indices']; labels=z['labels']
-        use=np.array([j for j,ch in enumerate(CHROMS) if ch in config['core_chromosomes'][fam]])
-        corec=c[:,hi][:,:,use,fi,:].sum(axis=2).cumsum(axis=2); cored=den[hi][:,use,fi].sum(axis=1)
-        allc=total[:,hi,fi,:].cumsum(axis=2); alld=den[hi].sum(axis=1)[:,fi]
+    # Group contrasts use only the chromosome on which the group was fitted.
+    groups=[]; summaries=json.loads((S3/'clustering_summary.json').read_text())
+    for case in summaries:
+        if not case['supported_partition']:continue
+        fam=case['family'];chrom=case['chromosome'];fi=['HSat2','HSat3'].index(fam);ci=CHROMS.index(chrom)
+        with np.load(S3/'clustering'/case['case']/'model.npz') as z: hi=z['hap_indices'];labels=z['labels']
+        assert np.all(den[hi,ci,fi]>0) and not ref[hi].any()
         for qi,x in enumerate(q):
             if x['target_family']!=fam:continue
+            ct=c[qi,hi,ci,fi,:].cumsum(axis=1);density=ct/den[hi,ci,fi,None]*1e6
             for g in np.unique(labels):
                 inside=labels==g
                 for radius in range(3):
-                    for scope,ct,dd in [('core',corec[qi],cored),('all_available',allc[qi],alld)]:
-                        density=ct[:,radius]/dd*1e6; pin=float((ct[inside,radius]>=10).mean()); pout=float((ct[~inside,radius]>=10).mean()); a=float(np.median(density[inside])); b=float(np.median(density[~inside])); ratio=float(np.log2((a+.001)/(b+.001)))
-                        groups.append(dict(query_index=qi,kmer_id=x['kmer_id'],target_family=fam,query_category=x['query_category'],group=f'G{g}',scope=scope,max_mismatches=radius,in_group_count_ge10_fraction=pin,out_group_count_ge10_fraction=pout,in_group_median_density_per_M=a,out_group_median_density_per_M=b,log2_median_density_ratio=ratio,passes_group_enrichment_screen=int(pin>=.8 and ratio>=2),passes_group_specific_screen=int(pin>=.8 and pout<=.2 and ratio>=2)))
+                    pin=float((ct[inside,radius]>=10).mean());pout=float((ct[~inside,radius]>=10).mean())
+                    aa=float(np.median(density[inside,radius]));bb=float(np.median(density[~inside,radius]))
+                    ratio=float(np.log2((aa+.001)/(bb+.001)))
+                    groups.append(dict(query_index=qi,kmer_id=x['kmer_id'],target_family=fam,query_category=x['query_category'],chromosome=chrom,group=f'G{g}',scope='chromosome',max_mismatches=radius,in_group_count_ge10_fraction=pin,out_group_count_ge10_fraction=pout,in_group_median_density_per_M=aa,out_group_median_density_per_M=bb,log2_median_density_ratio=ratio,passes_group_enrichment_screen=int(pin>=.8 and ratio>=2),passes_group_specific_screen=int(pin>=.8 and pout<=.2 and ratio>=2)))
     write(M/'group_robustness.tsv',groups)
 
     # Similarity components: Hamming <=2 in either orientation or any shared 12-mer.
@@ -115,7 +116,7 @@ def main():
     roots={}; classes=[]
     for i in range(nq): roots.setdefault(find(i),len(roots)+1); classes.append(f'SC{roots[find(i)]:03d}')
 
-    exact={r['kmer_id']:r for r in read(S4/'ranked/all_exact_ranked.tsv.gz')}; pidx={(r['kmer_id'],int(r['max_mismatches'])):r for r in pooled}; ridx={r['kmer_id']:r for r in robust}; chidx={(r['kmer_id'],int(r['max_mismatches'])):r for r in chrom}; gidx={(r['kmer_id'],r['group'],r['scope'],int(r['max_mismatches'])):r for r in groups}
+    exact={r['kmer_id']:r for r in read(S4/'ranked/all_exact_ranked.tsv.gz')}; pidx={(r['kmer_id'],int(r['max_mismatches'])):r for r in pooled}; ridx={r['kmer_id']:r for r in robust}; chidx={(r['kmer_id'],int(r['max_mismatches'])):r for r in chrom}; gidx={(r['kmer_id'],r['chromosome'],r['group'],int(r['max_mismatches'])):r for r in groups}
     ranked=[]
     for qi,x in enumerate(q):
         e=exact[x['kmer_id']]; p2=pidx[(x['kmer_id'],2)]; typ='pan' if x['query_category'].startswith('pan') else ('chromosome' if x['query_category'].startswith('chromosome') else 'regional_group')
@@ -124,8 +125,11 @@ def main():
             m=re.search(r'_chr(?:omosome_)?(\w+)$',x['query_category']); wanted='chr'+m.group(1) if m and not m.group(1).startswith('chr') else (m.group(1) if m else '')
             category_pass=[bool(chidx[(x['kmer_id'],d)]['passes_chromosome_screen']) and (not wanted or chidx[(x['kmer_id'],d)]['dominant_chromosome']==wanted) for d in range(3)];category_note=f'expected {wanted}' if wanted else 'dominant chromosome from mismatch count'
         elif typ=='regional_group':
-            m=re.search(r'G(\d+)',x['query_category']); wanted='G'+m.group(1) if m else '' ; specific='specific' in x['query_category']
-            category_pass=[bool(gidx[(x['kmer_id'],wanted,'core',d)]['passes_group_specific_screen' if specific else 'passes_group_enrichment_screen']) for d in range(3)];category_note=f'{wanted} core '+('specific' if specific else 'enriched')
+            m=re.search(r'(chr(?:[0-9]+|X|Y))_(G[0-9]+)',x['query_category'])
+            if not m:raise ValueError('regional category lacks chromosome and group: '+x['query_category'])
+            chrom,wanted=m.groups();specific='specific' in x['query_category']
+            category_pass=[bool(gidx[(x['kmer_id'],chrom,wanted,d)]['passes_group_specific_screen' if specific else 'passes_group_enrichment_screen']) for d in range(3)]
+            category_note=f'{chrom} {wanted} '+('specific' if specific else 'enriched')
         cat_tier='A_le2mm' if category_pass[2] else ('B_le1mm' if category_pass[1] else ('C_exact' if category_pass[0] else 'D_fails_exact'))
         # Smooth mismatch score, bounded and transparent; strict tiers remain separate columns.
         mm=(min(1,max(0,fnum(p2['target_vs_background_E'])/10))*.30 + min(1,max(0,fnum(p2['target_vs_other_family_E'])/10))*.25 + min(1,max(0,(fnum(p2['target_family_count_fraction'])-.9)/.1))*.20 + min(1,int(p2['strict_passing_nonreference_haps'])/516)*.25)

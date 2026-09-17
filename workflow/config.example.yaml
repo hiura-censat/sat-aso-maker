@@ -1,6 +1,6 @@
 # Copy to workflow/config.yaml, then replace the paths for your environment.
 # Use a new run_id whenever changing scientific parameters or input data.
-run_id: pooled10_hap500_e10
+run_id: chrwise_pooled10_hap500_e10
 source_root: ../VallePrep_v0.0.0
 python: /absolute/path/to/python
 samtools: /absolute/path/to/samtools

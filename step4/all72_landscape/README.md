@@ -1,5 +1,7 @@
 # 72 k-mer: CHM13 CenSat・hap group・chromosome landscape
 
+> このディレクトリは旧方式の共通 core 群による保存済み結果です。新ワークフローの図では family × 染色体ごとの群だけを表示し、全染色体共通のhap groupは定義しません。
+
 STEP 4で0/1/2 mismatch評価した全72配列について、CHM13のexactヒット座標、CenSat annotation内外、各hapのtarget family（HSat2またはHSat3）内exact count、regional group別・染色体別のcountを作成した。
 
 ## 最初に見るファイル

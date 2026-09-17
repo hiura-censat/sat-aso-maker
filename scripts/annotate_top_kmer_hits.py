@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'step4/top_kmer_landscape'
 FINE=ROOT.parent/'VallePrep_v0.0.0/workdir/work1/bed_all/chm13v2.0.censat.bed'
 BROAD=ROOT.parent/'VallePrep_v0.0.0/reference/chm13v2.0_censat_v2.1.bed'
-KIDS=['k16_3e476af8','k16_a0d0562c','k16_4118ba0e']
+KIDS=[r['kmer_id'] for r in csv.DictReader((OUT/'selected_kmers.tsv').open(),delimiter='\t')]
 CHRS=[f'chr{i}' for i in range(1,23)]+['chrX','chrY']
 def hashfile(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def readbed(p):

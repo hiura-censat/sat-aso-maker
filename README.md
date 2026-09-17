@@ -2,7 +2,7 @@
 
 既存の VallePrep/Altemose HSat2・HSat3 注釈と T2T 通過染色体から、HSat2/3 領域に濃縮する canonical 16-mer を見つけ、hap・family・染色体別に数え、配列パターン群と 0/1/2 mismatch によって ASO 標的候補を優先順位付けした解析です。最後に、評価した **72 配列**について CHM13 上の全 exact ヒット座標、CenSat annotation の内外、hap 群別・染色体別の分布を可視化しました。この README は同じ入力と実行環境で解析を再現するための入口です。実装の細部は [STEP 0](step0/README.md)、[STEP 1](step1/README.md)、[閾値スイープ](step1/threshold_sweep/README.md)、[STEP 2](step2/README.md)、[STEP 3](step3/README.md)、[STEP 4](step4/README.md)、[72 配列の位置解析](step4/all72_landscape/README.md)を参照してください。
 
-**保存済み結果と新規ワークフローの区別:** このページの 159,988 配列・72 配列などの数値と各 STEP の手順は、旧設定（pooled count ≥100 または 1 hap count ≥10、後段の threshold sweep）による保存済み解析を記録したものです。現在の [Snakemake ワークフロー](workflow/README.md)は **pooled count ≥10 または 1 hap count ≥500、`E > 10`、sweep なし**を新しいデフォルトとします。新条件の件数は再計算するまで不明です。旧数値を再計算する場合は、変更前の GitHub commit `11fe4a5` のコードを使用してください。
+**保存済み結果と新規ワークフローの区別:** このページの 159,988 配列・72 配列などの数値と各 STEP の手順は、旧設定（pooled count ≥100 または 1 hap count ≥10、後段の threshold sweep、複数染色体の共通 core を合算した主クラスタリング）による保存済み解析を記録したものです。現在の [Snakemake ワークフロー](workflow/README.md)は **pooled count ≥10 または 1 hap count ≥500、`E > 10`、sweep なし、染色体ごとに独立した STEP 3 クラスタリング**をデフォルトとします。新条件の件数は再計算するまで不明です。旧数値を再計算する場合は、変更前の GitHub commit `11fe4a5` のコードを使用してください。
 
 ## 解析の全体像
 

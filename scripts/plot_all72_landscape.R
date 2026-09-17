@@ -5,7 +5,7 @@ fine<-read.delim('../VallePrep_v0.0.0/workdir/work1/bed_all/chm13v2.0.censat.bed
 chrs<-c(paste0('chr',1:22),'chrX','chrY');colors<-c(CenSat='#CACFD4',alphaSat='#D46B74',HSat2='#247BA0',HSat3='#D99036',inside='#232C33',outside='#C53030')
 for(kid in head(q$kmer_id,pilot)){
  t<-total[total$kmer_id==kid,];ct<-chrtable[chrtable$kmer_id==kid,];b<-bins[bins$kmer_id==kid,];h<-hap[hap$kmer_id==kid & hap$hap!='chm13v2.0',];gc<-gchr[gchr$kmer_id==kid,];r<-rank[rank$kmer_id==kid,]
- fam<-as.character(t$target_family);grp<-c(paste0('G',1:if(fam=='HSat2')3 else 7),'NA')
+ fam<-as.character(t$target_family);grp<-paste0('G',1:8)
  png(file.path(out,paste0(kid,'_landscape.png')),width=3400,height=3350,res=180)
  layout(matrix(1:3,ncol=1),heights=c(1.7,.78,1.28));par(oma=c(3,0,4,0))
  par(mar=c(5,7,3,9));plot(NA,xlim=c(0,285),ylim=c(.5,24.5),yaxt='n',xaxt='n',xlab='CHM13 position (Mb; exact hits in 100 kb bins)',ylab='',main=sprintf('CHM13 | %s inside broad CenSat | %s outside | %s fine %s',format(t$inside_broad_CenSat,big.mark=','),format(t$outside_broad_CenSat,big.mark=','),format(t[[paste0('fine_',fam,'_hits')]],big.mark=','),fam))
@@ -17,13 +17,12 @@ for(kid in head(q$kmer_id,pilot)){
   z<-ct[ct$chromosome==ch,];text(255,y,sprintf('in %s | out %s',format(z$inside_broad_CenSat,big.mark=','),format(z$outside_broad_CenSat,big.mark=',')),adj=0,cex=.64,col=if(z$outside_broad_CenSat>0)colors['outside'] else '#3A444C')
  }
  legend('topleft',legend=c('Broad CenSat','Fine alphaSat','Fine HSat2','Fine HSat3','Exact inside','Exact outside'),fill=c(colors['CenSat'],colors['alphaSat'],colors['HSat2'],colors['HSat3'],NA,NA),pch=c(NA,NA,NA,NA,16,16),col=c(rep(NA,4),colors['inside'],colors['outside']),border=NA,bty='n',cex=.7)
- par(mar=c(5,6,3,2));h$group<-factor(h$group,levels=grp);boxes<-split(log1p(h$target_family_exact_hits),h$group);boxes<-boxes[vapply(boxes,length,integer(1))>0]
- n<-vapply(boxes,length,integer(1));if(length(boxes)){
-  boxplot(boxes,names=paste0(names(boxes),' (n=',n,')'),las=1,col=ifelse(names(boxes)=='NA','gray80',if(fam=='HSat2')'#94C4D6' else '#E6A85F'),outline=FALSE,ylab='log1p(target-family exact hits / hap)',main=sprintf('%s regional common-core groups | hap counts (NA: incomplete core)',fam));stripchart(boxes,vertical=TRUE,method='jitter',pch=16,cex=.16,col=adjustcolor('#333333',alpha.f=.3),add=TRUE)
- }else{plot.new();title('No group data')}
+ par(mar=c(5,6,3,2))
+ sizes<-tapply(gc$measurable_haps,gc$chromosome,sum)
+ if(length(sizes))barplot(sizes,las=2,col=if(fam=='HSat2')'#94C4D6' else '#E6A85F',ylab='Assigned measurable haps',main=sprintf('%s groups fitted separately by chromosome',fam)) else {plot.new();title('No supported chromosome groups')}
  par(mar=c(5,7,3,2));zz<-matrix(NA_real_,nrow=24,ncol=length(grp),dimnames=list(chrs,grp))
  for(i in seq_len(nrow(gc))){x<-gc[i,];if(x$group%in%grp&&!is.na(x$median_target_hits))zz[x$chromosome,x$group]<-log10(1+x$median_target_hits)}
- mat<-zz[24:1,,drop=FALSE];mx<-max(1,mat,na.rm=TRUE);image(seq_along(grp),seq_along(chrs),t(mat),col=colorRampPalette(c('#f6f4ee','#E8BA73','#C45F31','#783827'))(100),zlim=c(0,mx),axes=FALSE,xlab='Regional group',ylab='',main=sprintf('Group × chromosome | median %s exact-hit count per measurable hap',fam))
+ mat<-zz[24:1,,drop=FALSE];mx<-max(1,mat,na.rm=TRUE);image(seq_along(grp),seq_along(chrs),t(mat),col=colorRampPalette(c('#f6f4ee','#E8BA73','#C45F31','#783827'))(100),zlim=c(0,mx),axes=FALSE,xlab='Group (local to each chromosome)',ylab='',main=sprintf('Group × chromosome | median %s exact-hit count per measurable hap',fam))
  axis(1,at=seq_along(grp),labels=grp);axis(2,at=seq_along(chrs),labels=rev(chrs),las=2,cex.axis=.7);box()
  for(x in seq_along(grp))for(y in seq_along(chrs))if(is.finite(mat[y,x]))text(x,y,sprintf('%.0f',10^mat[y,x]-1),cex=.44,col=if(mat[y,x]>.65*mx)'white' else '#333333')
  mtext(sprintf('%s | %s | canonical target %s | %s | %s',kid,fam,r$canonical_target_5to3,r$candidate_type,r$category_robustness_tier),outer=TRUE,side=3,line=1,font=2,cex=1.25)
