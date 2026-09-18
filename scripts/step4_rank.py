@@ -4,6 +4,7 @@ import csv,gzip,json,math,hashlib
 from collections import defaultdict
 from pathlib import Path
 import numpy as np
+from pipeline_schema import STEP2_METRIC_COLUMNS,require_columns
 ROOT=Path(__file__).resolve().parents[1];S1=ROOT/'step1';S2=ROOT/'step2';S3=ROOT/'step3';OUT=ROOT/'step4'
 for d in ['ranked','shortlists','mismatch','plots','logs']:(OUT/d).mkdir(parents=True,exist_ok=True)
 def read(path):
@@ -27,7 +28,7 @@ def q(seq):
 def pct(v):
  order=np.argsort(v,kind='stable');r=np.empty(len(v));r[order]=np.arange(len(v));return r/max(1,len(v)-1)
 def main():
- base=read(S2/'candidate_metrics.tsv.gz');idx={r['kmer_id']:i for i,r in enumerate(base)};codes=np.fromfile(S2/'candidate_codes.u32',dtype='<u4')
+ base=read(S2/'candidate_metrics.tsv.gz');require_columns(base[0].keys() if base else [],STEP2_METRIC_COLUMNS,S2/'candidate_metrics.tsv.gz');idx={r['kmer_id']:i for i,r in enumerate(base)};codes=np.fromfile(S2/'candidate_codes.u32',dtype='<u4')
  with np.load(S1/'pooled_counts_and_scores.npz') as z:
   i=np.searchsorted(z['codes'],codes);assert np.array_equal(z['codes'][i],codes)
   bg=z['counts'][i,3,:].sum(axis=1);unionE=z['log2_enrichment'][i]

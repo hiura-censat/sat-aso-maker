@@ -3,6 +3,7 @@ import csv,gzip,json
 import numpy as np
 from step3_prepare import ROOT,OUT,S2,tsv
 from workflow_settings import settings
+from pipeline_schema import STEP2_METRIC_COLUMNS,require_columns
 
 def sequence(code):return ''.join('ACGT'[(int(code)>>i)&3] for i in range(30,-1,-2))
 def rc(s):return s.translate(str.maketrans('ACGT','TGCA'))[::-1]
@@ -19,7 +20,8 @@ def candidates():
  chrom_counts=np.load(OUT/'data/chromosome_feature_counts.npy',mmap_mode='r')
  feature_pool=np.load(OUT/'data/chromosome_feature_indices.npy')
  cluster_summaries=json.loads((OUT/'clustering_summary.json').read_text())
- with gzip.open(S2/'candidate_metrics.tsv.gz','rt') as f:metrics=list(csv.DictReader(f,delimiter='\t'))
+ with gzip.open(S2/'candidate_metrics.tsv.gz','rt') as f:
+  reader=csv.DictReader(f,delimiter='\t');require_columns(reader.fieldnames,STEP2_METRIC_COLUMNS,S2/'candidate_metrics.tsv.gz');metrics=list(reader)
  with np.load(ROOT/'step1/pooled_counts_and_scores.npz') as z:
   ix=np.searchsorted(z['codes'],codes);assert np.array_equal(z['codes'][ix],codes);background=z['background_density'][ix];background_count=z['counts'][ix,3,:].sum(axis=1)
  family_counts=np.array([[int(r['HSat2_count']),int(r['HSat3_count'])] for r in metrics]);fd=family_counts/den[~ref,:,:2].sum(axis=(0,1))[None,:]

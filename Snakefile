@@ -27,6 +27,7 @@ rule bootstrap:
     input:
         'workflow/config.yaml',
         'workflow/bootstrap.py',
+        'workflow/preflight.py',
         'workflow/stage.py',
         *sorted(p for p in glob.glob('scripts/*') if os.path.isfile(p) and not p.endswith('.pyc'))
     output:
@@ -34,8 +35,13 @@ rule bootstrap:
     shell:
         '{PY} workflow/bootstrap.py --config workflow/config.yaml --run {RUN}'
 
-rule step0:
+rule preflight:
     input: rules.bootstrap.output
+    output: done('preflight')
+    shell: '{PY} workflow/preflight.py --run {RUN} --python {PY}'
+
+rule step0:
+    input: rules.preflight.output
     output: done('step0')
     threads: T['step0']
     shell: '{PY} workflow/stage.py step0 --run {RUN} --threads {threads}'

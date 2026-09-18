@@ -4,6 +4,7 @@ import csv,gzip,json,time
 import numpy as np
 from step2_pipeline import OUT,S1,MANIFEST,CHROMS,REGIONS,write_tsv,sha
 from workflow_settings import settings
+from pipeline_schema import STEP2_CANDIDATE_COLUMNS,STEP2_METRIC_COLUMNS,require_columns
 
 def ratio(a,b):
  return np.divide(a,b,out=np.full(np.broadcast_shapes(np.shape(a),np.shape(b)),np.nan),where=np.asarray(b)>0)
@@ -47,10 +48,11 @@ def summarize():
  localden=den[nonref,:,:2].sum(axis=1);localfd=ratio(localb,localden[None,:,:]);localfe=np.log2((localfd[:,:,0]+1e-9)/(localfd[:,:,1]+1e-9))
  family_informative=((localb.sum(axis=2)>0)&np.all(localden[None,:,:]>0,axis=2)).sum(axis=1)
  h2fav=((localfe>0)&(localb.sum(axis=2)>0)).sum(axis=1);h3fav=((localfe<0)&(localb.sum(axis=2)>0)).sum(axis=1)
- candidate_rows=list(csv.DictReader((OUT/'candidates.tsv').open(),delimiter='\t'))
+ with (OUT/'candidates.tsv').open() as candidate_stream:
+  candidate_reader=csv.DictReader(candidate_stream,delimiter='\t');require_columns(candidate_reader.fieldnames,STEP2_CANDIDATE_COLUMNS,OUT/'candidates.tsv');candidate_rows=list(candidate_reader)
  with gzip.open(OUT/'candidate_metrics.tsv.gz','wt') as f:
-  w=csv.writer(f,delimiter='\t');w.writerow(['kmer_id','canonical_kmer','pooled_E_gt_10','pooled_and_broad90_E_gt_10','HSat2_count','HSat3_count','HSat23_union_count','HSat2_count_fraction','HSat2_density_per_M','HSat3_density_per_M','log2_HSat2_vs_HSat3_density','HSat2_prevalence_haps','HSat3_prevalence_haps','union_prevalence_haps','union_prevalence_fraction','union_count_ge10_haps','union_count_ge100_haps','target_count_p10','target_count_median','target_count_p90','target_density_per_M_p10','target_density_per_M_median','target_density_per_M_p90','target_density_CV','family_informative_haps','HSat2_density_favored_haps','HSat3_density_favored_haps'])
-  for i,row in enumerate(candidate_rows):w.writerow([row['kmer_id'],row['canonical_kmer'],row['pooled_E_gt_10'],row['pooled_and_broad90_E_gt_10'],*totals[i,:3],family_share[i],*(fd[i]*1e6),fe[i],*family_prev[i],prev[i],prev[i]/nonref.sum(),prev10[i],prev100[i],*tq[:,i],*dq[:,i],cv[i],family_informative[i],h2fav[i],h3fav[i]])
+  w=csv.writer(f,delimiter='\t');w.writerow(STEP2_METRIC_COLUMNS)
+  for i,row in enumerate(candidate_rows):w.writerow([row['kmer_id'],row['canonical_kmer'],row['pooled_selected_threshold'],row['pooled_and_broad_threshold'],*totals[i,:3],family_share[i],*(fd[i]*1e6),fe[i],*family_prev[i],prev[i],prev[i]/nonref.sum(),prev10[i],prev100[i],*tq[:,i],*dq[:,i],cv[i],family_informative[i],h2fav[i],h3fav[i]])
  # Chromosome shares and cross-haplotype recurrence, separately for each family/union.
  chr_results={}
  with gzip.open(OUT/'chromosome_specificity.tsv.gz','wt') as f:
@@ -70,17 +72,17 @@ def summarize():
     w.writerow([candidate_rows[i]['kmer_id'],region,CHROMS[best[i]] if total[i] else 'NA',int(ties[i]) if total[i] else 'NA',share[i],CHROMS[db[i]] if dm[i]>0 else 'NA',int(dti[i]) if dm[i]>0 else 'NA',dshare[i],entropy[i] if total[i] else 'NA',eligible[i],support[i],recurrence[i]])
  # Small reproducible plot tables; no clustering is performed here.
  rng=np.random.default_rng(42);sample=np.sort(rng.choice(n,min(n,40000),replace=False))
- write_tsv(P/'family_scatter.tsv',['log10_HSat2_density_plus_epsilon','log10_HSat3_density_plus_epsilon','pooled_pass'],((np.log10(fd[i,0]+1e-9),np.log10(fd[i,1]+1e-9),candidate_rows[i]['pooled_E_gt_10']) for i in sample))
+ write_tsv(P/'family_scatter.tsv',['log10_HSat2_density_plus_epsilon','log10_HSat3_density_plus_epsilon','pooled_pass'],((np.log10(fd[i,0]+1e-9),np.log10(fd[i,1]+1e-9),candidate_rows[i]['pooled_selected_threshold']) for i in sample))
  def histogram(name,values,edges):
   h,e=np.histogram(values[np.isfinite(values)],bins=edges);write_tsv(P/name,['midpoint','count'],zip((e[:-1]+e[1:])/2,h))
  histogram('family_share_hist.tsv',family_share,np.linspace(0,1,21));histogram('prevalence_hist.tsv',prev/nonref.sum(),np.linspace(0,1,21));histogram('union_chr_share_hist.tsv',chr_results['HSat23'][0],np.linspace(0,1,21))
  write_tsv(P/'specificity_prevalence.tsv',['prevalence_fraction','max_chromosome_count_fraction','dominant_chromosome_recurrence'],((prev[i]/nonref.sum(),chr_results['HSat23'][0][i],chr_results['HSat23'][1][i]) for i in sample))
- pooled_mask=np.array([r['pooled_E_gt_10']=='1' for r in candidate_rows]);ids=[]
+ pooled_mask=np.array([r['pooled_selected_threshold']=='1' for r in candidate_rows]);ids=[]
  for ri in [0,1]:
   rank=np.argsort(-fd[:,ri],kind='stable');ids.extend([int(i) for i in rank if pooled_mask[i]][:15])
  ids=list(dict.fromkeys(ids));heat=ratio(density[ids,:,2],np.nanmax(density[ids,:,2],axis=1)[:,None])
  write_tsv(P/'chromosome_heatmap.tsv',['kmer_id']+CHROMS,([candidate_rows[i]['kmer_id']]+heat[j].tolist() for j,i in enumerate(ids)))
  broad_min=int(np.ceil(settings()['selection']['broad_hap_fraction']*int(nonref.sum())))
- summary={'candidate_count':n,'sequence_sets':nh,'nonreference_haps':int(nonref.sum()),'broad_haps_min':broad_min,'reference':'chm13v2.0','observed_hap_chromosome_pairs':int(availability.sum()),'pooled_E_gt_10_candidates':int(pooled_mask.sum()),'pooled_and_broad_threshold_candidates':sum(int(r['pooled_and_broad90_E_gt_10']) for r in candidate_rows),'ambiguous_valid_starts':int(den[:,:,3].sum()),'HSat2_count_fraction_ge_0.9':int((family_share>=.9).sum()),'HSat3_count_fraction_ge_0.9':int((family_share<=.1).sum()),'union_max_chr_count_fraction_ge_0.9':int((chr_results['HSat23'][0]>=.9).sum()),'union_prevalence_ge_broad_threshold':int((prev>=broad_min).sum()),'matrix_A_shape':[n,nh],'matrix_B_shape':[n,nh*2],'matrix_C_family_columns_including_missing':len(columns),'step1_per_hap_agreement':True,'counts_dtype':'uint64','density_unit':'counts per million valid 16-mer starts'}
+ summary={'candidate_count':n,'sequence_sets':nh,'nonreference_haps':int(nonref.sum()),'broad_haps_min':broad_min,'reference':'chm13v2.0','observed_hap_chromosome_pairs':int(availability.sum()),'pooled_selected_candidates':int(pooled_mask.sum()),'pooled_and_broad_threshold_candidates':sum(int(r['pooled_and_broad_threshold']) for r in candidate_rows),'ambiguous_valid_starts':int(den[:,:,3].sum()),'HSat2_count_fraction_ge_0.9':int((family_share>=.9).sum()),'HSat3_count_fraction_ge_0.9':int((family_share<=.1).sum()),'union_max_chr_count_fraction_ge_0.9':int((chr_results['HSat23'][0]>=.9).sum()),'union_prevalence_ge_broad_threshold':int((prev>=broad_min).sum()),'matrix_A_shape':[n,nh],'matrix_B_shape':[n,nh*2],'matrix_C_family_columns_including_missing':len(columns),'step1_per_hap_agreement':True,'counts_dtype':'uint64','density_unit':'counts per million valid 16-mer starts'}
  (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary,indent=2),flush=True)
 if __name__=='__main__':summarize()
