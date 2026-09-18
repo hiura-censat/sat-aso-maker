@@ -30,4 +30,12 @@ class WorkflowContracts(unittest.TestCase):
                     'union_prevalence_haps'}
         self.assertTrue(required <= set(STEP2_METRIC_COLUMNS))
 
+    def test_step4_chromosome_accumulator_is_not_shadowed(self):
+        tree = ast.parse((ROOT / 'scripts' / 'step4_summarize.py').read_text(),
+                         filename='step4_summarize.py')
+        stored_names = {node.id for node in ast.walk(tree)
+                        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)}
+        self.assertIn('chromosome_rows', stored_names)
+        self.assertNotIn('chrom', stored_names)
+
 if __name__ == '__main__':unittest.main()
