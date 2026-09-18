@@ -203,6 +203,12 @@ def main():
  OUT.mkdir(exist_ok=True)
  for sub in ['discovery','counts','logs','plots','enrichment_by_hap','work']:(OUT/sub).mkdir(exist_ok=True)
  (OUT/'config.json').write_text(json.dumps(CONFIG,indent=2)+'\n')
+ if args.phase=='discovery' and not args.pilot:
+  inputs=['step0/manifest.tsv','step0/region_stats.tsv','step0/input_metadata.json','.local/src/jellyfish-2.3.1.tar.gz']
+  missing=[name for name in inputs if not (ROOT/name).is_file()]
+  if missing:raise FileNotFoundError('missing STEP1 provenance inputs: '+', '.join(missing))
+  checksums={name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in inputs}
+  (OUT/'input_checksums.json').write_text(json.dumps(checksums,indent=2)+'\n')
  jobs=MANIFEST[:args.pilot] if args.pilot else MANIFEST
  if args.phase=='discovery':
   with ThreadPoolExecutor(max_workers=args.workers) as pool:
